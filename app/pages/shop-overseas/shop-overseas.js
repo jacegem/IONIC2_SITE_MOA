@@ -25,11 +25,13 @@ export class ShopOverseasPage {
     this.ngZone = ngZone;
     this.readCnt = 0;
     this.items = [];
+    this.urlMap = {};
 
+ //this.ngZone.run(() => { console.log('loadClien Done!') });
     for (var i = 1; i <= 3; i++) {
-      this.loadPpomppu(i);
-      this.loadDdanzi(i);
       this.loadClien(i);
+      this.loadDdanzi(i);
+      this.loadPpomppu(i);
     }
   }
 
@@ -57,9 +59,28 @@ export class ShopOverseasPage {
     });
   }
 
+  addUrlMap(url){
+    this.urlMap[url] = 'true';
+  }
+  deleteUrlMap(url){
+    
+    delete this.urlMap[url];
+    
+    var cnt = Object.keys(this.urlMap).length;
+    console.log("CNT:"+ cnt); 
+    
+    if (cnt == 0){
+      debugger;
+      this.sortArray();
+      console.log("ARRAY_SORTED"); 
+    }
+  }
+  
   loadClien(page) {
     var url = "http://m.clien.net/cs3/board?bo_style=lists&bo_table=jirum&spt=&page=" + page;
-
+    
+    this.addUrlMap(url);
+    
     this.http.get(url).subscribe(data => {
       this.readCnt++;
       let parser = new DOMParser();
@@ -78,11 +99,15 @@ export class ShopOverseasPage {
         item.url = elements[i].querySelector('div.wrap_tit').getAttribute('onclick'); // url
         var pattern = /.+?='(.+)'/;
         var match = pattern.exec(item.url);
-        item.url = "http://m.clien.net/cs3/board" + match[1].trim();
+        if (!match) { continue; }
+                  
+        item.url = "http://m.clien.net/cs3/board" + match[1].trim();  
         item.title = elements[i].querySelector('span.lst_tit').textContent.trim();
         item.reply = elements[i].querySelector('span.lst_reply').textContent.trim();
-        this.items.push(item);
-
+        this.items.push(item);        
+        
+        this.addUrlMap(item.url);
+        
         this.http.get(item.url).subscribe(data => {
           this.readCnt++;
           let parser = new DOMParser();
@@ -98,11 +123,9 @@ export class ShopOverseasPage {
           let doc = parser.parseFromString(data.text(), "text/html");
           item.imgSrc = doc.querySelector('div.post_ct img[src]');
           if (item.imgSrc) {
-            item.imgSrc = item.imgSrc.getAttribute('src');
-            console.log(item.imgSrc);
+            item.imgSrc = item.imgSrc.getAttribute('src');            
             item.imgSrc = item.imgSrc.replace("http://cache.", "https://");
-          }
-          console.log(item.imgSrc);
+          }          
           item.date = doc.querySelector('span.view_info').textContent.trim();
           var pattern = /((\d{2})-(\d{2}) (\d{2}):(\d{2})) .+?(\d+)/;
           var match = pattern.exec(item.date);
@@ -118,12 +141,14 @@ export class ShopOverseasPage {
           //debugger;
           if (item.url) this.items.push(item);
           //this.ngZone.run(() => { console.log('loadClien Done!') });
-          this.sortArray();
+          this.deleteUrlMap(item.url);
         });
       }
 
-      this.sortArray();
-    });
+      
+      this.deleteUrlMap(url);
+      });
+   
   }
 
   loadPpomppu(page) {
@@ -132,6 +157,8 @@ export class ShopOverseasPage {
     var url = "http://m.ppomppu.co.kr/new/bbs_list.php?id=ppomppu4&page=" + page;
     //let headers = new Headers({ 'Referer': 'http://m.ppomppu.co.kr' });
     //let options = new RequestOptions({ headers: headers });
+    this.addUrlMap(url);
+    
     this.http.get(url).subscribe(data => {
       let parser = new DOMParser();
       let doc = parser.parseFromString(data.text(), "text/html");
@@ -166,27 +193,29 @@ export class ShopOverseasPage {
         this.items.push(item);
       }
 
-      this.sortArray();
+      ///this.sortArray();
+      this.deleteUrlMap(url);
       //this.ngZone.run(() => { console.log('loadPpomppu Done!') });
     });
   }
 
 
-  sortArray() {
-    this.readCnt--;
-    if (this.readCnt > 0) return;
-
-    this.items.sort((a, b) => {
-      //console.log("A:" + a.date + " : " + b.date);
-      //console.log("B:" + b);
-      if (a.dateSort < b.dateSort) {
-        return 1;
-      } else if (a.dateSort > b.dateSort) {
-        return -1;
-      } else {
-        return 0;
-      }
+  sortArray() {   
+    
+    this.ngZone.run(()=>{
+      this.items.sort((a, b) => {
+          //console.log("A:" + a.date + " : " + b.date);
+          //console.log("B:" + b);
+          if (a.dateSort < b.dateSort) {
+            return 1;
+          } else if (a.dateSort > b.dateSort) {
+            return -1;
+          } else {
+            return 0;
+          }
+        });  
     });
+    
 
     //this.infiniteScrollCount -= 1;
     //if (this.infiniteScrollCount == 0) this.infiniteScroll.complete();
@@ -217,6 +246,8 @@ export class ShopOverseasPage {
 
   loadDdanzi(page) {
     var url = "http://www.ddanzi.com/index.php?mid=pumpout&m=1&page=" + page;
+    this.addUrlMap(url);
+     
     this.http.get(url).subscribe(data => {
       var parser = new DOMParser();
       var doc = parser.parseFromString(data.text(), "text/html");
@@ -248,7 +279,8 @@ export class ShopOverseasPage {
 
         //console.log(elements[i]);
       }
-      this.sortArray();
+      //this.sortArray();
+      this.deleteUrlMap(url);
       //this.ngZone.run(() => { console.log('loadDdanzi Done!') });
     });
   }

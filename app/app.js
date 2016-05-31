@@ -4,7 +4,7 @@ import {GettingStartedPage} from './pages/getting-started/getting-started';
 import {ListPage} from './pages/list/list';
 import {BambooPage} from './pages/bamboo/bamboo';
 import {ShopOverseasPage} from './pages/shop-overseas/shop-overseas';
-import {SampleMapPage} from './pages/sample-map/sample-map';
+import {ShopKoreaPage} from './pages/shop-korea/shop-korea';
 
 @App({
   templateUrl: 'build/app.html',
@@ -22,9 +22,9 @@ class MyApp {
     this.initializeApp();
 
     // used for an example of ngFor and navigation
-    this.pages = [
-      { title: '샘플 맵', component: SampleMapPage },
+    this.pages = [      
       { title: '해외구매', component: ShopOverseasPage },
+      { title: '국내구매', component: ShopKoreaPage },
       { title: 'Bamboo', component: BambooPage },
       { title: 'Getting Started', component: GettingStartedPage },
       { title: 'List', component: ListPage }

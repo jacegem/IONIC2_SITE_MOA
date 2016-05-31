@@ -15,6 +15,7 @@ export class ArraySort {
     Takes a value and makes it lowercase.
    */
   transform(value, args) {
+    debugger;
     value.sort((a, b) => {
       //console.log("A:" + a.date + " : " + b.date);
       //console.log("B:" + b);
@@ -25,7 +26,7 @@ export class ArraySort {
       } else {
         return 0;
       }
-    });  
+    });
+    return value;  
   }
-  
 }
