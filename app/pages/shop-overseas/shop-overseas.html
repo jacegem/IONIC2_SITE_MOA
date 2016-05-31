@@ -12,22 +12,6 @@
 </ion-navbar>
 
 <ion-content padding class="shop-overseas">
-
-  <!--<ion-card *ngFor="#item of items">
-    <button ion-item (click)="openLink(item)">
-        <img src="{{item.imgSrc}}" />
-        <h3 *ngIf="!item.soldOut">{{item.title}}</h3>
-        <h3 [ngClass]="{soldOut:item.soldOut}" *ngIf="item.soldOut">종료:{{item.title}}</h3>            
-            <p>
-              <span *ngIf="item.price"> <ion-icon name="pricetag" > ${{item.price}} </ion-icon></span>
-              <span *ngIf="item.reply"> <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
-              <span *ngIf="item.good"> <ion-icon name="heart" > {{item.good}} </ion-icon></span>
-              <span *ngIf="item.date"> <ion-icon name="time" > {{item.date}} </ion-icon></span>
-              <span *ngIf="item.read"> <ion-icon name="book" > {{item.read}} </ion-icon></span>
-            </p>
-    </button>
-  </ion-card>-->
-
   <ion-list>
     <ion-refresher (start)="doStarting()" (refresh)="doRefresh($event, refresher)" (pulling)="doPulling($event, amt)">
       <ion-refresher-content pullingIcon="arrow-down" pullingText="PULL_TO_REFRESH" refreshingSpinner="circles"

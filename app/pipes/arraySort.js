@@ -15,7 +15,17 @@ export class ArraySort {
     Takes a value and makes it lowercase.
    */
   transform(value, args) {
-    value = value + ''; // make sure it's a string
-    return value.toLowerCase();
+    value.sort((a, b) => {
+      //console.log("A:" + a.date + " : " + b.date);
+      //console.log("B:" + b);
+      if (a.dateSort < b.dateSort) {
+        return 1;
+      } else if (a.dateSort > b.dateSort) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });  
   }
+  
 }
