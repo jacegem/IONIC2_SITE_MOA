@@ -1,9 +1,13 @@
 # IONIC2_SITE_MOA
 
 ## 설치
+
+`nodejs`가 설치된 상태에서 시작합니다. 4.x 버전으로 설치합니다. 
+
 ```sh
 npm install -g cordova ionic@beta
 ```
+ionic2 를 사용하기 위해서 `ionic@beta` 로 설치 합니다. 
 
 ## 시작
 ```sh
