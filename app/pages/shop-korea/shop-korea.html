@@ -8,7 +8,7 @@
   <button menuToggle>
     <ion-icon name="menu"></ion-icon>
   </button>
-  <ion-title>shopKorea</ion-title>
+  <ion-title>국내구매</ion-title>
 </ion-navbar>
 
 <ion-content padding class="shop-korea">
@@ -27,7 +27,7 @@
           <h3 [ngClass]="{soldOut:item.soldOut}" *ngIf="item.soldOut">종료:{{item.title}}</h3>            
             <p>
               <span *ngIf="item.price"> <ion-icon name="pricetag" > ${{item.price}} </ion-icon></span>
-              <span *ngIf="item.reply"> <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
+              <span *ngIf="item.reply" [ngClass]="{red:item.reply > 1000}"> <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
               <span *ngIf="item.good"> <ion-icon name="heart" > {{item.good}} </ion-icon></span>
               <span *ngIf="item.date"> <ion-icon name="time" > {{item.date}} </ion-icon></span>
               <span *ngIf="item.read"> <ion-icon name="book" > {{item.read}} </ion-icon></span>

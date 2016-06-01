@@ -13,13 +13,17 @@
 
 <ion-content padding class="shop-overseas">
   <ion-list>
-    <ion-refresher (start)="doStarting()" (refresh)="doRefresh($event, refresher)" (pulling)="doPulling($event, amt)">
+    <ion-refresher (start)="doStarting()" (refresh)="doRefresh($event)" (pulling)="doPulling($event)">
       <ion-refresher-content pullingIcon="arrow-down" pullingText="PULL_TO_REFRESH" refreshingSpinner="circles"
         refreshingText="REFRESHING">
       </ion-refresher-content>
     </ion-refresher>
+    
+    <ion-item *ngIf="itemsShow.length == 0">
+       데이터 조회중 입니다. {{items.length}} 개 데이터 수집중
+    </ion-item>
 
-    <ion-item-sliding *ngFor="#item of items">
+    <ion-item-sliding *ngFor="#item of itemsShow">
       <button full ion-item (click)="openLink(item)">
       <!--<ion-letter-avatar style="margin:0;" item-left>
       </ion-letter-avatar>-->
@@ -29,16 +33,16 @@
             <!--<p item-right style="float:right; font-size:70%; white-space: normal;">-->
             <p>
               <span *ngIf="item.price"> <ion-icon name="pricetag" > ${{item.price}} </ion-icon></span>
-              <span *ngIf="item.reply"> <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
-              <span *ngIf="item.good"> <ion-icon name="heart" > {{item.good}} </ion-icon></span>
+              <span *ngIf="item.reply" [ngClass]="{red:item.reply >= 100}"> <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
+              <span *ngIf="item.good" [ngClass]="{red:item.good >= 10}"> <ion-icon name="heart" > {{item.good}} </ion-icon></span>
               <span *ngIf="item.date"> <ion-icon name="time" > {{item.date}} </ion-icon></span>
-              <span *ngIf="item.read"> <ion-icon name="book" > {{item.read}} </ion-icon></span>
+              <span *ngIf="item.read" [ngClass]="{red:item.read >= 5000}"> <ion-icon name="book" > {{item.read}} </ion-icon></span>
             </p>
         </button>
     </ion-item-sliding>
-    <!--<ion-infinite-scroll (infinite)="doInfinite($event)">
+    <ion-infinite-scroll (infinite)="doInfinite($event)">
       <ion-infinite-scroll-content></ion-infinite-scroll-content>
-    </ion-infinite-scroll>-->
+    </ion-infinite-scroll>
   </ion-list>
 
 </ion-content>

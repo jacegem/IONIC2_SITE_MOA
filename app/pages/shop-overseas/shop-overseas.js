@@ -25,26 +25,39 @@ export class ShopOverseasPage {
     this.ngZone = ngZone;
     this.readCnt = 0;
     this.items = [];
+    this.itemsShow = [];
     this.urlMap = {};
-
+    this.page = 1;
  //this.ngZone.run(() => { console.log('loadClien Done!') });
-    for (var i = 1; i <= 3; i++) {
-      this.loadClien(i);
-      this.loadDdanzi(i);
-      this.loadPpomppu(i);
-    }
+    this.loadDatas();
   }
 
   doStarting(){
     console.log("doStarting");
   }
-  doRefresh(event, refresher){
-    console.log("doRefresh"+event+refresher);
-    debugger;
+  doRefresh(event){
+    console.log("doRefresh"+event);  
+      
+    this.itemsShow = [];
+    this.items = [];
+    this.page = 1;
+    this.loadDatas();
+    this.loadDatas();
+    this.loadDatas();
+    
     event.complete();
   }
-  doPulling(event, amt){
-    console.log("doPulling"+event+amt);
+  
+  loadDatas(){
+    this.loadClien(this.page);
+    this.loadDdanzi(this.page);
+    this.loadPpomppu(this.page);
+    this.page += 1; 
+  }
+  
+  
+  doPulling(event){
+    console.log("doPulling"+event);
   }
   
 
@@ -214,6 +227,7 @@ export class ShopOverseasPage {
             return 0;
           }
         });  
+      this.itemsShow = this.items;
     });
     
 
@@ -287,6 +301,7 @@ export class ShopOverseasPage {
 
 
   doInfinite(infiniteScroll) {
+    //this.loadDatas();
     infiniteScroll.complete();
     return;
 
