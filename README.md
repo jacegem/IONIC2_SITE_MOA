@@ -27,3 +27,20 @@ ionic plugin add cordova-plugin-inappbrowser
 ionic plugin add cordova-plugin-whitelist
 ```
 
+## 서버 시작
+```sh
+ionic serve
+```
+
+## 빌드
+```sh
+ionic build android
+```
+
+플랫폼이 추가 되어 있지 않은 경우, 플랫폼 추가 질문이 나옵니다. 아래 명령어를 통해 설치도 가능합니다. 
+```sh
+ionic platform add android
+```
+
+`ios` 의 경우 `android` 자리에 대신 적으면 됩니다. 
+
