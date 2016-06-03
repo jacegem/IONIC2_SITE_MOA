@@ -17,4 +17,9 @@ export class ShopKoreaPage {
   constructor(nav) {
     this.nav = nav;
   }
+  
+  openRTSP(){
+    var url = "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov";
+    videoplayer.play(url);
+  }
 }

@@ -17,7 +17,10 @@
       <ion-refresher-content pullingIcon="arrow-down" pullingText="PULL_TO_REFRESH" refreshingSpinner="circles" refreshingText="REFRESHING">
       </ion-refresher-content>
     </ion-refresher>
-
+    
+    <button (click)="openRTSP()"> open rstp
+    </button>
+    
     <ion-item-sliding *ngFor="#item of items">
       <button full ion-item (click)="openLink(item)">
       <!--<ion-letter-avatar style="margin:0;" item-left>

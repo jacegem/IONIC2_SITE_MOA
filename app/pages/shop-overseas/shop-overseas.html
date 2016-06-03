@@ -35,7 +35,7 @@
               <span *ngIf="item.price"> <ion-icon name="pricetag" > ${{item.price}} </ion-icon></span>
               <span *ngIf="item.reply" [ngClass]="{red:item.reply >= 100}"> <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
               <span *ngIf="item.good" [ngClass]="{red:item.good >= 10}"> <ion-icon name="heart" > {{item.good}} </ion-icon></span>
-              <span *ngIf="item.date"> <ion-icon name="time" > {{item.date}} </ion-icon></span>
+              <span *ngIf="item.dateStr"> <ion-icon name="time" > {{item.dateStr}} </ion-icon></span>
               <span *ngIf="item.read" [ngClass]="{red:item.read >= 5000}"> <ion-icon name="book" > {{item.read}} </ion-icon></span>
             </p>
         </button>

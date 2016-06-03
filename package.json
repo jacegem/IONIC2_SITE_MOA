@@ -31,7 +31,8 @@
     "cordova-plugin-statusbar",
     "ionic-plugin-keyboard",
     "cordova-plugin-inappbrowser",
-    "cordova-plugin-admobpro"
+    "cordova-plugin-admobpro",
+    "cordova-plugin-videoplayer"
   ],
   "cordovaPlatforms": []
 }
