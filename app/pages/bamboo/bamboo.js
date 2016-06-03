@@ -12,8 +12,8 @@ import {Firebase} from '../../providers/firebase/firebase';
   Ionic pages and navigation.
 */
 @Page({
-  templateUrl: 'build/pages/bamboo/bamboo.html'
-  , providers: [Firebase]
+  templateUrl: 'build/pages/bamboo/bamboo.html', 
+  providers: [Firebase],
   // , pipes: [SortK]
 })
 export class BambooPage {

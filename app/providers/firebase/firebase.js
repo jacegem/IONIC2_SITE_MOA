@@ -30,7 +30,7 @@ export class Firebase {
     //   "provider": "anonymous",
     //   "uid": "3c4e577c-d713-4561-b903-07c012f78a80"
     // };    
-    //  debugger;
+    //debugger;
     if (firebase.apps.length > 0) {
       this.fb = firebase;
     } else {

@@ -4,6 +4,7 @@ import {GettingStartedPage} from './pages/getting-started/getting-started';
 import {ListPage} from './pages/list/list';
 import {BambooPage} from './pages/bamboo/bamboo';
 import {ShopOverseasPage} from './pages/shop-overseas/shop-overseas';
+import {ShopOverseas2Page} from './pages/shop-overseas-2/shop-overseas-2';
 import {ShopKoreaPage} from './pages/shop-korea/shop-korea';
 
 @App({
@@ -22,7 +23,8 @@ class MyApp {
     this.initializeApp();
 
     // used for an example of ngFor and navigation
-    this.pages = [      
+    this.pages = [
+      { title: '해외구매2', component: ShopOverseas2Page },      
       { title: '해외구매', component: ShopOverseasPage },
       { title: '국내구매', component: ShopKoreaPage },
       { title: 'Bamboo', component: BambooPage },
@@ -31,7 +33,7 @@ class MyApp {
     ];
 
     //this.rootPage = ShopOverseasPage;
-    this.rootPage = ShopOverseasPage;
+    this.rootPage = ShopOverseas2Page;
 
     this.addAdMob();
   }

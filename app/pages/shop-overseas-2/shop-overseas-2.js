@@ -3,36 +3,69 @@ import {Http} from 'angular2/http';
 import {InAppBrowser} from 'ionic-native';
 import {ArraySort} from '../../pipes/arraySort';
 import {NgZone} from 'angular2/core';
+import {Firebase} from '../../providers/firebase/firebase';
 /*
-  Generated class for the ShopOverseasPage page.
+  Generated class for the ShopOverseas2Page page.
 
   See http://ionicframework.com/docs/v2/components/#navigation for more info on
   Ionic pages and navigation.
 */
-
-
 @Page({
-  templateUrl: 'build/pages/shop-overseas/shop-overseas.html',
-  pipes: [ArraySort],
+  templateUrl: 'build/pages/shop-overseas-2/shop-overseas-2.html',
+  providers: [Firebase],
 })
-export class ShopOverseasPage {
-  static get parameters() {
-    return [[NavController], [Http], [Platform], [NgZone]];
+export class ShopOverseas2Page {
+   static get parameters() {
+    return [[NavController], [Http], [Platform], [NgZone], [Firebase]];
   }
 
-  constructor(nav, http, platform, ngZone) {
-    this.nav = nav;
-    this.http = http;
+  /*
+  firebase 를 통해 최초에 100건을 가져온다. date descending
+  이 후 각 페이지에 접속해서, 새로운 아이템이 있으면, firebase에 저장한다.
+  firebase 에서 업데이트 된 정보가 있으면 받아서, 해당 정보를 수정한다. 
+  새로운 정보라면, 위에 올려서 출력한다. unshift
+  */
+  
+  constructor(nav, http, platform, ngZone, firebase) {
+    this.nav = nav;           // 기본으로 있음.
+    this.http = http;         // http 요청을 위해 사용
     this.platform = platform;
     this.ngZone = ngZone;
-    this.readCnt = 0;
+    this.firebase = firebase; // firebase 사용
+    this.database = firebase.getDatabase();
+    
+    this.path = 'shop-overseas';  
+    
+    var url = 'http://www.ddanzi.com/index.php?mid=pumpout&m=1&page=';
+    var uid = this.database.ref().child(this.path).push().key;        
+    let d = new Date();
+    let data = {      
+      uid: uid,
+      url: url,
+      text: 'some text',
+      dateFormat: d.toISOString(),
+      date: d,
+      subcount: 0
+    }
+    // save
+    this.database.ref(this.path + '/' + uid).set(data);
+        
+    this.database.ref(this.path).orderByChild("dateFormat").limitToLast(2).once('value', (snapshot) => {      
+      var val = snapshot.val();
+      debugger;
+      //this.addBamboo(snapshot);
+    });
+    
+    
     this.items = [];
     this.itemsShow = [];
     this.urlMap = {};
     this.page = 1;
     //this.ngZone.run(() => { console.log('loadClien Done!') });
-    this.loadDatas(3);
+    //this.loadDatas(3);
   }
+  
+ 
 
   doStarting() {
     console.log("doStarting");
@@ -103,7 +136,7 @@ export class ShopOverseasPage {
     this.addUrlMap(url);
 
     this.http.get(url).subscribe(data => {
-      this.readCnt++;
+      
       let parser = new DOMParser();
       let doc = parser.parseFromString(data.text(), "text/html");
       let elements = doc.querySelectorAll('table.tb_lst_normal tbody tr');
@@ -130,7 +163,7 @@ export class ShopOverseasPage {
         this.addUrlMap(item.url);
 
         this.http.get(item.url).subscribe(data => {
-          this.readCnt++;
+          
           let parser = new DOMParser();
           let url = data.url;
           let item = {};
@@ -232,7 +265,7 @@ export class ShopOverseasPage {
   }
 
   loadPpomppu(page) {
-    this.readCnt++;
+    
 
     var url = "http://m.ppomppu.co.kr/new/bbs_list.php?id=ppomppu4&page=" + page;
     //let headers = new Headers({ 'Referer': 'http://m.ppomppu.co.kr' });
@@ -335,7 +368,7 @@ export class ShopOverseasPage {
         this.addUrlMap(item.url);
 
         this.http.get(item.url).subscribe(data => {
-          this.readCnt++;
+          
           let parser = new DOMParser();
           let url = data.url;
           let item = {};
@@ -370,13 +403,5 @@ export class ShopOverseasPage {
     infiniteScroll.complete();
     return;
   }
-  
-   getUrlKey(url){
-    var changedUrl = url
-        .replace(/\./g, "_dot_")
-        .replace(/#/g, "_sharpt_")
-        .replace(/\//g, "_slash_")
-        ;
-    return changedUrl;
-  }
 }
+
