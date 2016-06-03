@@ -15,7 +15,7 @@ import {Firebase} from '../../providers/firebase/firebase';
   providers: [Firebase],
 })
 export class ShopOverseas2Page {
-   static get parameters() {
+  static get parameters() {
     return [[NavController], [Http], [Platform], [NgZone], [Firebase]];
   }
 
@@ -25,7 +25,7 @@ export class ShopOverseas2Page {
   firebase 에서 업데이트 된 정보가 있으면 받아서, 해당 정보를 수정한다. 
   새로운 정보라면, 위에 올려서 출력한다. unshift
   */
-  
+
   constructor(nav, http, platform, ngZone, firebase) {
     this.nav = nav;           // 기본으로 있음.
     this.http = http;         // http 요청을 위해 사용
@@ -33,39 +33,172 @@ export class ShopOverseas2Page {
     this.ngZone = ngZone;
     this.firebase = firebase; // firebase 사용
     this.database = firebase.getDatabase();
+
+    this.items = [];          // 아이템을 담는곳
+    this.itemsShow = [];      // 출력할 아이템을 담는 곳
+    this.lastDateFormat = ''  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다. 
+
+    this.path = 'shop-overseas';  // 저장하는 공간 주소
+
+    this.getItems();
+
+    /*
+        
+      */
+
+  }
+
+  // 데이터를 추가적으로 가져온다. 
+  getItemsMore() {
+    var part = [];
+    this.database.ref(this.path).orderByChild("dateFormat").endAt(lastDateFormat).limitToLast(100).once('value', (snapshot) => {
+      var items = snapshot.val();
+      for (var key in items) {
+        var item = items[key];
+        part.unshift(item);
+        this.lastDateFormat = item.dateFormat;
+      }
+      for (var i = 0; i < part.length; i++) {
+        this.items.push(part[i]);
+      }
+      this.showItems();
+    });
+  }
+
+  // 최초에 필요한 데이터를 가져온다. 
+  getItems() {
+    this.database.ref(this.path).orderByChild("dateFormat").limitToLast(100).once('value', (snapshot) => {
+      var items = snapshot.val();
+      for (var key in items) {
+        var item = items[key];
+        this.items.unshift(item);
+        this.lastDateFormat = item.dateFormat;
+      }
+      this.showItems();
+
+      this.getAddedData();
+      this.getUpdatedData();
+      this.getRealData();
+    });
+  }
+
+  getRealData() {
+    this.saveDataFromPpomppu(1);
+  }
+
+  saveDataFromPpomppu(page) {
+
     
-    this.path = 'shop-overseas';  
+    var url = "http://m.ppomppu.co.kr/new/bbs_list.php?id=ppomppu4&page=" + page;
+
+    this.http.get(url).subscribe(data => {
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(data.text(), "text/html");
+      let elements = doc.querySelectorAll('ul.bbsList .none-border');
+
+      for (let i in elements) {
+        if (i == 'length') break;
+
+        var item = {};
+        item.title = elements[i].querySelector('span.title').textContent.trim();  // 제품명
+        item.imgSrc = elements[i].querySelector('div.thmb img').src; // 이미지\
+        item.imgSrc = item.imgSrc.replace("http://cache.", "https://");
+        item.category = elements[i].querySelector('span.ty').textContent.trim();  // 카테고리
+        item.writer = elements[i].querySelector('span.ty_02').textContent.trim(); // 글쓴이
+        item.reply = elements[i].querySelector('div.com_line span');
+        if (item.reply) item.reply = item.reply.textContent.trim(); //  댓글 수 
+        item.good = elements[i].querySelector('span.recom').textContent.trim();;  // 추천                   
+        //item.read = elements[i].querySelectorAll('td[nowrap]')[3]; //조회
+
+        var dateText = elements[i].querySelector('span.info').textContent.trim(); //  08:07:15 | 조회 1234        
+        var pattern = /(\d{2}.\d{2}.\d{2}).+?(\d+)/;
+        var match = pattern.exec(dateText);
+        item.date = match[1].trim();
+        item.read = match[2];
+        this.date = this.getDate(item.date);
+        item.dateFormat = this.getDateFormat(item.date);
+
+        item.url = "http://m.ppomppu.co.kr/new/" + elements[i].querySelector('a[href]').getAttribute('href'); // url
+        item.soldOut = elements[i].querySelector('span.title span');
+
+        this.saveData(item);
+      }
+    });
+  }
+
+  saveData(newData) {
+    // 해당 url을 가진 데이터가 있는지 확인한다. 
+    // 있으면 update 없으면 set
+    for (var i=0; i < this.items.length; i++){
+      var item = this.items[i];
+      if (item.url == newData.url){
+        updateData(item, newData);
+        return;
+      }
+    }
     
-    var url = 'http://www.ddanzi.com/index.php?mid=pumpout&m=1&page=';
-    var uid = this.database.ref().child(this.path).push().key;        
-    let d = new Date();
-    let data = {      
+    // setData    
+    var uid = this.database.ref().child(this.path).push().key;    
+    let data = {
       uid: uid,
-      url: url,
-      text: 'some text',
-      dateFormat: d.toISOString(),
-      date: d,
-      subcount: 0
+      url: item.url,
+      price: item.price,
+      good: item.good,
+      reply: item.reply,
+      read: item.read,
+      title: item.title,
+      dateFormat: item.dateFormat,
+      soldOut: item.soldOut
     }
     // save
     this.database.ref(this.path + '/' + uid).set(data);
-        
-    this.database.ref(this.path).orderByChild("dateFormat").limitToLast(2).once('value', (snapshot) => {      
-      var val = snapshot.val();
-      debugger;
-      //this.addBamboo(snapshot);
-    });
-    
-    
-    this.items = [];
-    this.itemsShow = [];
-    this.urlMap = {};
-    this.page = 1;
-    //this.ngZone.run(() => { console.log('loadClien Done!') });
-    //this.loadDatas(3);
   }
   
- 
+  updateData(oldData, newData){
+    let data = {
+      price: item.price,
+      good: item.good,
+      reply: item.reply,
+      read: item.read,
+      title: item.title,      
+      soldOut: item.soldOut
+    }
+    
+    this.database.ref(this.path + '/' + oldData.uid).update(data);
+  }
+  
+
+  getUpdatedData() {
+    //todo      
+  }
+
+  getAddedData() {
+    // 업데이트 되는 데이터를 처리한다.
+    this.database.ref(this.path).on('child_added', (snapshot) => {      
+      var item = snapshot.val();
+      this.items.unshift(item);
+      this.showItems();
+    });
+  }
+
+  showItems() {
+    this.itemsShow = [];
+
+    this.ngZone.run(() => {
+      this.items.sort((a, b) => {
+        if (a.dateFormat < b.dateFormat) {
+          return 1;
+        } else if (a.dateFormat > b.dateFormat) {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
+      this.itemsShow = this.items;
+    });
+  }
+
+
 
   doStarting() {
     console.log("doStarting");
@@ -117,7 +250,7 @@ export class ShopOverseas2Page {
   addUrlMap(url) {
     this.urlMap[url] = 'true';
   }
-  
+
   deleteUrlMap(url) {
     delete this.urlMap[url];
 
@@ -136,7 +269,7 @@ export class ShopOverseas2Page {
     this.addUrlMap(url);
 
     this.http.get(url).subscribe(data => {
-      
+
       let parser = new DOMParser();
       let doc = parser.parseFromString(data.text(), "text/html");
       let elements = doc.querySelectorAll('table.tb_lst_normal tbody tr');
@@ -163,7 +296,7 @@ export class ShopOverseas2Page {
         this.addUrlMap(item.url);
 
         this.http.get(item.url).subscribe(data => {
-          
+
           let parser = new DOMParser();
           let url = data.url;
           let item = {};
@@ -205,31 +338,31 @@ export class ShopOverseas2Page {
     });
 
   }
-  
-  getDateFormat(date){
+
+  getDateFormat(date) {
+    debugger;
     if (window.dateFormat)
-      return window.dateFormat(date, "yyyy-mm-dd HH:MM");      
+      return window.dateFormat(date, "yyyy-mm-dd HH:MM");
   }
-  
-  getDate(dateStr){
+
+  getDate(dateStr) {
     var now = new Date();
-    var yyyy = now.getFullYear();    
+    var yyyy = now.getFullYear();
     var mm = now.getMonth() + 1;
     var dd = now.getDate();
     var hh = now.getHours();
     var mi = now.getMinutes();
-    
+
     var pattern = /(\d{2})-(\d{2}) (\d{2}):(\d{2})/;    // 06-02 09:45
     var match = pattern.exec(dateStr);
-    
-    if (match){      
+
+    if (match) {
       mm = match[1];
-      dd = match[2];      
+      dd = match[2];
       hh = match[3];
       mi = match[4];      
-      return new Date(yyyy, mm, dd, hh, mi);
     }
-    
+
     pattern = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/;  //2016-06-02 13:43
     match = pattern.exec(dateStr);
     if (match) {
@@ -237,12 +370,19 @@ export class ShopOverseas2Page {
       mm = match[2];
       dd = match[3];
       hh = match[4];
-      mi = match[5];
-      return new Date(yyyy,mm,dd,hh,mi);
+      mi = match[5];      
     }
+    
+    pattern = /(\d{2}):(\d{2}):(\d{2})/;    // 06-02 09:45
+    match = pattern.exec(dateStr);
+    if (match) {
+      hh = match[1];
+      mi = match[2];      
+    }
+    return new Date(yyyy, mm, dd, hh, mi);
   }
-  
-  
+
+
   getDateSort(itemDate) {
     var pattern = /(\d+)(.)(\d+).(\d+)/;
     var match = pattern.exec(itemDate);
@@ -265,7 +405,7 @@ export class ShopOverseas2Page {
   }
 
   loadPpomppu(page) {
-    
+
 
     var url = "http://m.ppomppu.co.kr/new/bbs_list.php?id=ppomppu4&page=" + page;
     //let headers = new Headers({ 'Referer': 'http://m.ppomppu.co.kr' });
@@ -331,7 +471,7 @@ export class ShopOverseas2Page {
   }
 
 
-  
+
 
 
   loadDdanzi(page) {
@@ -364,11 +504,11 @@ export class ShopOverseas2Page {
         //console.log("item price:" + item.price);
         item.soldOut = elements[i].querySelector('span.title img[src$="end_icon.png"]');
         this.items.push(item);
-        
+
         this.addUrlMap(item.url);
 
         this.http.get(item.url).subscribe(data => {
-          
+
           let parser = new DOMParser();
           let url = data.url;
           let item = {};
@@ -386,13 +526,13 @@ export class ShopOverseas2Page {
           if (match) {
             item.date = this.getDate(match[1]);
             item.dateFormat = this.getDateFormat(item.date);
-          }          
-          if (item.url) this.items.push(item);          
+          }
+          if (item.url) this.items.push(item);
           this.deleteUrlMap(item.url);
-        });        
+        });
       }
-      
-      this.deleteUrlMap(url);      
+
+      this.deleteUrlMap(url);
     });
   }
 
