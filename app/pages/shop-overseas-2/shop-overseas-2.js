@@ -373,7 +373,7 @@ export class ShopOverseas2Page {
       mi = match[5];      
     }
     
-    pattern = /(\d{2}):(\d{2}):(\d{2})/;    // 06-02 09:45
+    pattern = /(\d{2}):(\d{2}):(\d{2})/;    // 17:44:33
     match = pattern.exec(dateStr);
     if (match) {
       hh = match[1];
