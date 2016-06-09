@@ -113,7 +113,7 @@ export class ShopOverseas2Page {
         if (item.reply) item.reply = item.reply.textContent.trim(); //  댓글 수 
         item.good = elements[i].querySelector('span.recom').textContent.trim();;  // 추천
         item.url = "http://m.ppomppu.co.kr/new/" + elements[i].querySelector('a[href]').getAttribute('href'); // url
-        
+
         let dateText = elements[i].querySelector('span.info').textContent.trim(); //  08:07:15 | 조회 1234   
         let match = pattern.exec(dateText);
         item.date = match[1].trim();
@@ -124,7 +124,7 @@ export class ShopOverseas2Page {
         
         item.soldOut = elements[i].querySelector('span.title span');
         
-
+        //todo: 세부 페이지 조회해서 가져오는 기능 추가해야 함.
 
 
         this.saveData(item);
