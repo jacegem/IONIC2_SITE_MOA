@@ -34,7 +34,10 @@ export class ShopOverseas2Page {
     this.firebase = firebase; // firebase 사용
     this.database = firebase.getDatabase();
 
-    this.items = [];          // 아이템을 담는곳
+    this.sitePage = 1;        // 사이트 페이지
+    this.pageRow = 10;
+    this.items = {};          // 아이템을 담는곳
+    this.infoMap = {};
     this.itemsShow = [];      // 출력할 아이템을 담는 곳
     this.lastDateFormat = ''  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다. 
 
@@ -42,53 +45,53 @@ export class ShopOverseas2Page {
 
     this.getItems();
     this.getRealData();
-    
+  }
 
+
+  // 최초에 필요한 데이터를 가져온다. 
+  getItems() {
+    this.items = [];
+
+    this.database.ref(this.path).orderByChild("dateFormat").limitToLast(this.pageRow).once('value', (snapshot) => {
+      var items = snapshot.val();
+      debugger;
+      if (items) this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
+      for (var key in items) {
+        var item = items[key];
+        this.items[item.url] = item;
+      }
+      this.showItems();
+    });    
   }
 
   // 데이터를 추가적으로 가져온다. 
   getItemsMore(infiniteScroll) {
-    //debugger;
-    var part = [];    
-    this.database.ref(this.path).orderByChild("dateFormat").endAt(lastDateFormat).limitToLast(100).once('value', (snapshot) => {
+    //debugger;    
+    debugger;
+    this.database.ref(this.path).orderByChild("dateFormat").endAt(this.lastDateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
+      debugger;
       var items = snapshot.val();
+      if (items) this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
       for (var key in items) {
         var item = items[key];
-        part.unshift(item);
-        this.lastDateFormat = item.dateFormat;
-      }
-      for (var i = 0; i < part.length; i++) {
-        this.items.push(part[i]);
+        this.items[item.url] = item;
       }
       this.showItems();
       infiniteScroll.complete();
     });
   }
 
-  // 최초에 필요한 데이터를 가져온다. 
-  getItems() {
-    this.items = [];
-
-    this.database.ref(this.path).orderByChild("dateFormat").limitToLast(100).once('value', (snapshot) => {
-      var items = snapshot.val();
-      debugger;
-      console.log(items);
-      for (var key in items) {
-        var item = items[key];
-        this.items.unshift(item);
-        this.lastDateFormat = item.dateFormat;
-      }
-      this.showItems();
-    });
-
-    //this.getAddedData();
-    this.getUpdatedData();
-    this.getRealData();
+  getRealData() {
+    this.loadPpomppu(this.sitePage);
+    this.sitePage++;
   }
 
-  getRealData() {
-    this.sitePage = 1;
-    this.loadPpomppu(this.sitePage);
+  doInfinite(infiniteScroll) {
+    // firebase 에서 더 가져온다.
+    this.getItemsMore(infiniteScroll);
+    this.getRealData();
+
+    return;
   }
 
   loadPpomppu(page) {
@@ -98,7 +101,7 @@ export class ShopOverseas2Page {
       let parser = new DOMParser();
       let doc = parser.parseFromString(data.text(), "text/html");
       let elements = doc.querySelectorAll('ul.bbsList .none-border');
-      let pattern = /(\d{2}.\d{2}.\d{2}).+?(\d+)/;
+
 
       for (let i in elements) {
         if (i == 'length') break;
@@ -113,21 +116,25 @@ export class ShopOverseas2Page {
         if (item.reply) item.reply = item.reply.textContent.trim(); //  댓글 수 
         item.good = elements[i].querySelector('span.recom').textContent.trim();;  // 추천
         item.url = "http://m.ppomppu.co.kr/new/" + elements[i].querySelector('a[href]').getAttribute('href'); // url
-
-        let dateText = elements[i].querySelector('span.info').textContent.trim(); //  08:07:15 | 조회 1234   
-        let match = pattern.exec(dateText);
-        item.date = match[1].trim();
-        item.read = match[2];
-        let date = this.getDate(item.date);
-        item.dateFormat = this.getDateFormat(date);
-        console.log("time:"+ item.dateFormat);
-        
         item.soldOut = elements[i].querySelector('span.title span');
-        
-        //todo: 세부 페이지 조회해서 가져오는 기능 추가해야 함.
 
+        this.infoMap[item.url] = item;
 
-        this.saveData(item);
+        this.http.get(item.url).subscribe(data => {
+          let url = data.url;
+          let parser = new DOMParser();
+          let doc = parser.parseFromString(data.text(), "text/html");
+          let dateText = doc.querySelector('div.info span.hi').textContent.trim();
+
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
+          let pattern = /(\d{4}-\d{2}-\d{2} \d{2}:\d{2})/;
+          let match = pattern.exec(dateText);
+          let date = this.getDate(match[1]);
+          item.dateFormat = this.getDateFormat(date);
+          this.items[url] = item;
+          this.saveData(item);
+        });
       }
     });
   }
@@ -136,7 +143,7 @@ export class ShopOverseas2Page {
 
     var key = this.getKey(newData);
     this.database.ref(this.path + "/" + key).once('value', (snapshot) => {
-      
+
       var item = snapshot.val();
       var data = {};
       if (newData.price) data.price = newData.price;
@@ -164,25 +171,19 @@ export class ShopOverseas2Page {
     return rep;
   }
 
-  getUpdatedData() {
-    //todo      
-  }
 
-  getAddedData() {
-    // 업데이트 되는 데이터를 처리한다.
-    this.database.ref(this.path).on('child_added', (snapshot) => {
-      debugger;
-      var item = snapshot.val();
-      this.items.unshift(item);
-      this.showItems();
-    });
-  }
 
-// 아이템들을 보여준다.
-  showItems() {    
+  // 아이템들을 보여준다.
+  showItems() {
     this.itemsShow = [];
+    var item;
+    for (var url in this.items) {
+      item = this.items[url];
+      this.itemsShow.push(item);
+    }
+
     this.ngZone.run(() => {
-      this.items.sort((a, b) => {
+      this.itemsShow.sort((a, b) => {
         if (a.dateFormat < b.dateFormat) {
           return 1;
         } else if (a.dateFormat > b.dateFormat) {
@@ -191,13 +192,12 @@ export class ShopOverseas2Page {
           return 0;
         }
       });
-      this.itemsShow = this.items;
     });
   }
 
 
 
-// 링크 페이지를 연다.
+  // 링크 페이지를 연다.
   openLink(item) {
     this.platform.ready().then(() => {
       window.open(item.url, '_blank');
@@ -321,11 +321,11 @@ export class ShopOverseas2Page {
       hh = match[1];
       mi = match[2];
     }
-    return new Date(yyyy, mm, dd, hh, mi);
+    return new Date(yyyy, mm - 1, dd, hh, mi);
   }
 
 
- 
+
 
 
 
@@ -393,12 +393,6 @@ export class ShopOverseas2Page {
   }
 
 
-  doInfinite(infiniteScroll) {
-    // firebase 에서 더 가져온다.
-    this.getItemsMore(infiniteScroll);
-    // 사이트에서 더 가져온다.
-    //infiniteScroll.complete();
-    return;
-  }
+
 }
 
