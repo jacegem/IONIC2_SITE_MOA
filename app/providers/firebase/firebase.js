@@ -31,18 +31,9 @@ export class Firebase {
     //debugger;
     if (firebase.apps.length > 0) {
       this.fb = firebase;
-    } else {     
-      // Initialize Firebase
-      // var config = {
-      //   apiKey: "AIzaSyAFb6L3F0YMW0XJl6NdZGP7wtoWfa5naPY",
-      //   authDomain: "myfirstapp-bcfdc.firebaseapp.com",
-      //   databaseURL: "https://myfirstapp-bcfdc.firebaseio.com",
-      //   storageBucket: "myfirstapp-bcfdc.appspot.com",
-      // };
-          debugger;
+    } else {
       var config = globalConfig.firebase;
-
-        this.fb = firebase.initializeApp(config);
+      this.fb = firebase.initializeApp(config);
     }
     this.database = this.fb.database();
 
