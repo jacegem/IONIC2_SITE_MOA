@@ -12,11 +12,14 @@
 </ion-navbar>
 
 <ion-content padding class="shop-overseas-2">
-  <ion-list>    
+  <ion-list>
+    <ion-refresher (refresh)="doRefresh($event)" >
+      <ion-refresher-content pullingIcon="arrow-down" pullingText="PULL_TO_REFRESH" refreshingSpinner="circles" refreshingText="REFRESHING">
+      </ion-refresher-content>
+    </ion-refresher>
     <ion-item *ngIf="itemsShow.length == 0">
-       데이터 조회중 입니다. {{items.length}} 개 데이터 수집중
+      데이터 조회중 입니다. {{items.length}} 개 데이터 수집중
     </ion-item>
-    {{itemsShow.length}} 개 데이터
     <ion-item-sliding *ngFor="#item of itemsShow">
       <button full ion-item (click)="openLink(item)">
       <!--<ion-letter-avatar style="margin:0;" item-left>

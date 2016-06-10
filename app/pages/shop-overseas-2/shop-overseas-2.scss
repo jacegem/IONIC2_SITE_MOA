@@ -9,14 +9,15 @@
         color:#ACACAC;
     }
     
-    button {
-        padding : 5px;
+    button.item {
+        padding : 0px;
     }
     
     p {
         float: right;       
         font-size:70%; 
-        white-space: normal; 
+        white-space: normal;
+        color:#777777; 
     }
     
     img.small {
@@ -28,5 +29,9 @@
     
     .red {
         color:#FF1111;
+    }
+
+    ion-content{
+        padding: 5px;
     }
 }

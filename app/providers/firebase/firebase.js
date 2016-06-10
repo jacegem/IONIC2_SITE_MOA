@@ -24,8 +24,6 @@ export class Firebase {
     //     this._ngZone.run(() => { console.log('Outside Done!') });
     //   }}));
 
-
-
     // var token = {
     //   "provider": "anonymous",
     //   "uid": "3c4e577c-d713-4561-b903-07c012f78a80"
@@ -33,15 +31,18 @@ export class Firebase {
     //debugger;
     if (firebase.apps.length > 0) {
       this.fb = firebase;
-    } else {
+    } else {     
       // Initialize Firebase
-      var config = {
-        apiKey: "AIzaSyAFb6L3F0YMW0XJl6NdZGP7wtoWfa5naPY",
-        authDomain: "myfirstapp-bcfdc.firebaseapp.com",
-        databaseURL: "https://myfirstapp-bcfdc.firebaseio.com",
-        storageBucket: "myfirstapp-bcfdc.appspot.com",
-      };
-      this.fb = firebase.initializeApp(config);
+      // var config = {
+      //   apiKey: "AIzaSyAFb6L3F0YMW0XJl6NdZGP7wtoWfa5naPY",
+      //   authDomain: "myfirstapp-bcfdc.firebaseapp.com",
+      //   databaseURL: "https://myfirstapp-bcfdc.firebaseio.com",
+      //   storageBucket: "myfirstapp-bcfdc.appspot.com",
+      // };
+          debugger;
+      var config = globalConfig.firebase;
+
+        this.fb = firebase.initializeApp(config);
     }
     this.database = this.fb.database();
 

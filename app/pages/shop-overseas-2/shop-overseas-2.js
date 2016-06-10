@@ -33,44 +33,55 @@ export class ShopOverseas2Page {
     this.ngZone = ngZone;
     this.firebase = firebase; // firebase 사용
     this.database = firebase.getDatabase();
+    this.path = '2016/site-moa/shop-overseas';  // 저장하는 공간 주소
 
+    this.init();
+    this.getItems();
+    this.getRealData();
+    //this.getAddedData();
+  }
+
+  init() {
     this.sitePage = 1;        // 사이트 페이지
-    this.pageRow = 10;
+    this.pageRow = 30;
     this.items = {};          // 아이템을 담는곳
     this.infoMap = {};
     this.itemsShow = [];      // 출력할 아이템을 담는 곳
-    this.lastDateFormat = ''  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다. 
-
-    this.path = '2016/site-moa/shop-overseas';  // 저장하는 공간 주소
-
-    this.getItems();
-    this.getRealData();
+    this.lastDateFormat = ''  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다.
   }
 
+  getAddedData() {
+    this.database.ref(this.path).on('child_added', (snapshot) => {
+      var item = snapshot.val();
+      if (length(this.lastDateFormat) > 0 && item.dateFormat < this.lastDateFormat) return;
+
+      this.items[item.url] = item;
+      this.showItems();
+    });
+  }
 
   // 최초에 필요한 데이터를 가져온다. 
-  getItems() {
+  getItems(event) {
     this.items = [];
 
     this.database.ref(this.path).orderByChild("dateFormat").limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
-      debugger;
       if (items) this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
       for (var key in items) {
         var item = items[key];
         this.items[item.url] = item;
       }
       this.showItems();
-    });    
+      debugger;
+      if (event) event.complete();
+    });
   }
 
   // 데이터를 추가적으로 가져온다. 
   getItemsMore(infiniteScroll) {
-    //debugger;    
-    debugger;
     this.database.ref(this.path).orderByChild("dateFormat").endAt(this.lastDateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
-      debugger;
       var items = snapshot.val();
+      debugger;
       if (items) this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
       for (var key in items) {
         var item = items[key];
@@ -83,6 +94,8 @@ export class ShopOverseas2Page {
 
   getRealData() {
     this.loadPpomppu(this.sitePage);
+    this.loadClien(this.sitePage);
+    this.loadDdanzi(this.sitePage);
     this.sitePage++;
   }
 
@@ -92,6 +105,15 @@ export class ShopOverseas2Page {
     this.getRealData();
 
     return;
+  }
+
+  doRefresh(event) {
+    // if (event.state == "refreshing") {
+    //   return;
+    // }
+    this.init();
+    this.getItems(event);
+    this.getRealData();
   }
 
   loadPpomppu(page) {
@@ -165,9 +187,14 @@ export class ShopOverseas2Page {
   }
 
   getKey(data) {
-    var url = data.url;
-    var rep = url.replace(/\./g, "_dot_")
-      .replace(/\//g, "_slash_");
+    let url = data.url;
+    
+    let pattern = /(.+)&page=\d+(.+)/;
+    let match = pattern.exec(url);
+    if (match) url = match[1] + match[2];
+
+    let rep = url.replace(/\./g, "_dot_")
+                 .replace(/\//g, "_slash_");    
     return rep;
   }
 
@@ -208,78 +235,56 @@ export class ShopOverseas2Page {
   loadClien(page) {
     var url = "http://m.clien.net/cs3/board?bo_style=lists&bo_table=jirum&spt=&page=" + page;
 
-    this.addUrlMap(url);
-
     this.http.get(url).subscribe(data => {
-
       let parser = new DOMParser();
       let doc = parser.parseFromString(data.text(), "text/html");
       let elements = doc.querySelectorAll('table.tb_lst_normal tbody tr');
 
       for (let i in elements) {
         var item = {};
-        //debugger;
-        //console.log(i);
         if (i == 'length') break;
         item.category = elements[i].querySelector('span.lst_category');  // 카테고리
         if (!item.category) continue;
         if (!item.category.textContent.trim().startsWith('[해외구매')) continue;
-
         item.url = elements[i].querySelector('div.wrap_tit').getAttribute('onclick'); // url
         var pattern = /.+?='(.+)'/;
         var match = pattern.exec(item.url);
         if (!match) { continue; }
-
         item.url = "http://m.clien.net/cs3/board" + match[1].trim();
         item.title = elements[i].querySelector('span.lst_tit').textContent.trim();
         item.reply = elements[i].querySelector('span.lst_reply').textContent.trim();
-        this.items.push(item);
 
-        this.addUrlMap(item.url);
+        this.infoMap[item.url] = item;
 
         this.http.get(item.url).subscribe(data => {
-
           let parser = new DOMParser();
           let url = data.url;
-          let item = {};
-          for (let i in this.items) {
-            if (this.items[i].url == url) {
-              item = this.items[i];
-              this.items.splice(i, 1);
-              break;
-            }
-          }
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
+
           let doc = parser.parseFromString(data.text(), "text/html");
           item.imgSrc = doc.querySelector('div.post_ct img[src]');
           if (item.imgSrc) {
             item.imgSrc = item.imgSrc.getAttribute('src');
             item.imgSrc = item.imgSrc.replace("http://cache.", "https://");
           }
-          var date = doc.querySelector('span.view_info').textContent.trim();
-          var pattern = /([0-9\- :]+) .+?(\d+)/;
-          var match = pattern.exec(date);
+
+          let date = doc.querySelector('span.view_info').textContent.trim();
+          let pattern = /([0-9\- :]+) .+?(\d+)/;
+          let match = pattern.exec(date);
           if (match) {
             item.date = this.getDate(match[1]);
-
             item.dateFormat = this.getDateFormat(item.date);
             item.read = match[2];
-
-            var now = new Date();
-            var yyyy = now.getFullYear();
-            var str = yyyy + '-' + match[2] + '-' + match[3] + 'T' + match[4] + ':' + match[5];
-            item.dateSort = new Date(str);
           }
-          //debugger;
-          if (item.url) this.items.push(item);
-          //this.ngZone.run(() => { console.log('loadClien Done!') });
-          this.deleteUrlMap(item.url);
+
+          if (item.url) {
+            this.items[url] = item;
+            this.saveData(item);
+          }
         });
       }
-
-
-      this.deleteUrlMap(url);
     });
-
   }
 
   getDateFormat(date) {
@@ -288,6 +293,8 @@ export class ShopOverseas2Page {
   }
 
   getDate(dateStr) {
+    dateStr = dateStr.trim();
+
     var now = new Date();
     var yyyy = now.getFullYear();
     var mm = now.getMonth();
@@ -297,23 +304,24 @@ export class ShopOverseas2Page {
 
     var pattern = /(\d{2})-(\d{2}) (\d{2}):(\d{2})/;    // 06-02 09:45
     var match = pattern.exec(dateStr);
-
     if (match) {
-      mm = match[1];
+      mm = match[1] - 1;
       dd = match[2];
       hh = match[3];
       mi = match[4];
     }
 
-    pattern = /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/;  //2016-06-02 13:43
+    pattern = /(\d{4}).(\d{2}).(\d{2}) (\d{2}):(\d{2})/;  //2016-06-02 13:43
     match = pattern.exec(dateStr);
+    debugger;
     if (match) {
       yyyy = match[1];
-      mm = match[2];
+      mm = match[2] - 1;
       dd = match[3];
       hh = match[4];
       mi = match[5];
     }
+
 
     pattern = /(\d{2}):(\d{2}):(\d{2})/;    // 17:44:33
     match = pattern.exec(dateStr);
@@ -321,24 +329,16 @@ export class ShopOverseas2Page {
       hh = match[1];
       mi = match[2];
     }
-    return new Date(yyyy, mm - 1, dd, hh, mi);
+    return new Date(yyyy, mm, dd, hh, mi);
   }
-
-
-
-
-
-
 
   loadDdanzi(page) {
     var url = "http://www.ddanzi.com/index.php?mid=pumpout&m=1&page=" + page;
-    this.addUrlMap(url);
 
     this.http.get(url).subscribe(data => {
       var parser = new DOMParser();
       var doc = parser.parseFromString(data.text(), "text/html");
       var elements = doc.querySelectorAll('ul.lt li');
-      //console.log(elements.length);
 
       for (var i in elements) {
         if (i == 'length') break;
@@ -356,41 +356,36 @@ export class ShopOverseas2Page {
         var match = pattern.exec(item.read);
         item.read = match[0];
         item.price = elements[i].querySelector('div.price span').textContent.trim();
-        //debugger;
-        //console.log("item price:" + item.price);
         item.soldOut = elements[i].querySelector('span.title img[src$="end_icon.png"]');
-        this.items.push(item);
 
-        this.addUrlMap(item.url);
+        this.infoMap[item.url] = item;
 
         this.http.get(item.url).subscribe(data => {
-
           let parser = new DOMParser();
           let url = data.url;
-          let item = {};
-          for (let i in this.items) {
-            if (this.items[i].url == url) {
-              item = this.items[i];
-              this.items.splice(i, 1);
-              break;
-            }
-          }
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
+
           let doc = parser.parseFromString(data.text(), "text/html");
-          var date = doc.querySelector('span.ex').textContent.trim();
-          var pattern = /(\d[0-9\. :]+\d)/;
+          let date = doc.querySelector('span.ex').textContent.trim();
+          let pattern = /(\d{4}).(\d{2}).(\d{2}) (\d{2}):(\d{2})/;  //2016.06.02 13:43   // 2016.06.09 18:29:53
+          debugger;
           var match = pattern.exec(date);
           if (match) {
-            item.date = this.getDate(match[1]);
+            item.date = this.getDate(match[0]);
             item.dateFormat = this.getDateFormat(item.date);
           }
-          if (item.url) this.items.push(item);
-          this.deleteUrlMap(item.url);
+          if (item.url) {
+            this.items[url] = item;
+            this.saveData(item);
+          }
+
         });
       }
 
-      this.deleteUrlMap(url);
     });
   }
+
 
 
 
