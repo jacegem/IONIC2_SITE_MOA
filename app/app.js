@@ -26,14 +26,14 @@ class MyApp {
     this.pages = [
       { title: '해외구매', component: ShopOverseas2Page },      
       //{ title: '해외구매', component: ShopOverseasPage },
-      { title: '국내구매', component: ShopKoreaPage },
-      { title: 'Bamboo', component: BambooPage },
-      { title: 'Getting Started', component: GettingStartedPage },
-      { title: 'List', component: ListPage }
+      { title: '국내구매', component: ShopKoreaPage }
+      // { title: 'Bamboo', component: BambooPage },
+      // { title: 'Getting Started', component: GettingStartedPage },
+      // { title: 'List', component: ListPage }
     ];
 
-    //this.rootPage = ShopOverseasPage;
-    this.rootPage = ShopOverseas2Page;
+    //this.rootPage = ShopOverseas2Page;
+    this.rootPage = ShopKoreaPage;
 
     this.addAdMob();
   }

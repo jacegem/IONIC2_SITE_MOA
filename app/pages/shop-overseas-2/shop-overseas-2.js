@@ -51,15 +51,15 @@ export class ShopOverseas2Page {
     this.lastDateFormat = '1111-01-01 11:11';  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다.
   }
 
-  getAddedData() {
-    this.database.ref(this.path).on('child_added', (snapshot) => {
-      var item = snapshot.val();
-      if (item.dateFormat < this.lastDateFormat) return;
+  // getAddedData() {
+  //   this.database.ref(this.path).on('child_added', (snapshot) => {
+  //     var item = snapshot.val();
+  //     if (item.dateFormat < this.lastDateFormat) return;
 
-      this.items[item.url] = item;
-      this.showItems();
-    });
-  }
+  //     this.items[item.url] = item;
+  //     this.showItems();
+  //   });
+  // }
 
   // 최초에 필요한 데이터를 가져온다. 
   getItems(event) {

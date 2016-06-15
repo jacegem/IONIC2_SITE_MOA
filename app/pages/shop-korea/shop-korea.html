@@ -12,33 +12,32 @@
 </ion-navbar>
 
 <ion-content padding class="shop-korea">
+
   <ion-list>
-    <ion-refresher (start)="doStarting()" (refresh)="doRefresh($event, refresher)" (pulling)="doPulling($event, amt)">
+    <ion-refresher (refresh)="doRefresh($event)">
       <ion-refresher-content pullingIcon="arrow-down" pullingText="PULL_TO_REFRESH" refreshingSpinner="circles" refreshingText="REFRESHING">
       </ion-refresher-content>
     </ion-refresher>
-    
-    <button (click)="openRTSP()"> open rstp
-    </button>
-    
-    <ion-item-sliding *ngFor="#item of items">
+    <ion-item *ngIf="itemsShow.length == 0">
+      <ion-spinner></ion-spinner>데이터 조회중 입니다.
+    </ion-item>
+    <ion-item-sliding *ngFor="#item of itemsShow">
       <button full ion-item (click)="openLink(item)">
-      <!--<ion-letter-avatar style="margin:0;" item-left>
-      </ion-letter-avatar>-->
         <img class="small" item-left src="{{item.imgSrc}}" />
           <h3 *ngIf="!item.soldOut">{{item.title}}</h3>
-          <h3 [ngClass]="{soldOut:item.soldOut}" *ngIf="item.soldOut">종료:{{item.title}}</h3>            
+          <h3 [ngClass]="{soldOut:item.soldOut}" *ngIf="item.soldOut">종료:{{item.title}}</h3>
             <p>
               <span *ngIf="item.price"> <ion-icon name="pricetag" > ${{item.price}} </ion-icon></span>
-              <span *ngIf="item.reply" [ngClass]="{red:item.reply > 1000}"> <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
-              <span *ngIf="item.good"> <ion-icon name="heart" > {{item.good}} </ion-icon></span>
-              <span *ngIf="item.date"> <ion-icon name="time" > {{item.date}} </ion-icon></span>
-              <span *ngIf="item.read"> <ion-icon name="book" > {{item.read}} </ion-icon></span>
+              <span *ngIf="item.reply" > <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
+              <span *ngIf="item.good" > <ion-icon name="heart" > {{item.good}} </ion-icon></span>              
+              <span *ngIf="item.read" > <ion-icon name="book" > {{item.read}} </ion-icon></span>
+              <span *ngIf="item.dateFormat"> <ion-icon name="time" > {{item.dateFormat}} </ion-icon></span>
             </p>
         </button>
     </ion-item-sliding>
-    <!--<ion-infinite-scroll (infinite)="doInfinite($event)">
+    <ion-infinite-scroll (infinite)="doInfinite($event)">
       <ion-infinite-scroll-content></ion-infinite-scroll-content>
-    </ion-infinite-scroll>-->
+    </ion-infinite-scroll>
   </ion-list>
+
 </ion-content>
