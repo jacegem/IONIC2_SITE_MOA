@@ -47,7 +47,7 @@ class MyApp {
         if (AdMob) {
           AdMob.createBanner(
             {
-              adId: 'ca-app-pub-3129126307582044/9943917413',
+              adId: globalconfig.admob.bannerId,
               position: AdMob.AD_POSITION.BOTTOM_CENTER,
               autoShow: true
             }

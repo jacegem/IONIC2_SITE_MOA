@@ -23,7 +23,7 @@ export class ShopOverseas2Page {
   firebase 를 통해 최초에 100건을 가져온다. date descending
   이 후 각 페이지에 접속해서, 새로운 아이템이 있으면, firebase에 저장한다.
   firebase 에서 업데이트 된 정보가 있으면 받아서, 해당 정보를 수정한다. 
-  새로운 정보라면, 위에 올려서 출력한다. unshift
+  새로운 정보라면, 위에 올려서 출력한다. 
   */
 
   constructor(nav, http, platform, ngZone, firebase) {
@@ -37,13 +37,14 @@ export class ShopOverseas2Page {
 
     this.init();
     this.getRealData();
-
+    
+    //this.getItems();
     setInterval(this.getItems(), 3000);
   }
 
   init() {
     this.sitePage = 1;        // 사이트 페이지
-    this.pageRow = 30;
+    this.pageRow = 50;
     this.items = {};          // 아이템을 담는곳
     this.infoMap = {};
     this.itemsShow = [];      // 출력할 아이템을 담는 곳
@@ -62,7 +63,7 @@ export class ShopOverseas2Page {
 
   // 최초에 필요한 데이터를 가져온다. 
   getItems(event) {
-    this.items = [];
+    this.itemsShow = [];
 
     this.database.ref(this.path).orderByChild("dateFormat").limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
@@ -72,7 +73,8 @@ export class ShopOverseas2Page {
 
       for (var key in items) {
         var item = items[key];
-        this.items[item.url] = item;
+        this.itemsShow.unshift(item);
+        //this.items[item.url] = item;
       }
       this.showItems();
 
@@ -89,12 +91,21 @@ export class ShopOverseas2Page {
       if (items)
         this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
 
+      var moreItems = [];
       for (var key in items) {
         var item = items[key];
-        this.items[item.url] = item;
+        moreItems.unshift(item);
+        //this.items[item.url] = item;
       }
+
+      for (var i in moreItems) {
+        this.itemsShow.push(moreItems[i]);
+      }
+
       this.showItems();
-      infiniteScroll.complete();
+
+      if (infiniteScroll)
+        infiniteScroll.complete();
     });
   }
 
@@ -167,31 +178,50 @@ export class ShopOverseas2Page {
     });
   }
 
-  saveData(newData) {
+  // saveData(newData) {
+
+  //   var key = this.getKey(newData);
+  //   this.database.ref(this.path + "/" + key).once('value', (snapshot) => {
+
+  //     var item = snapshot.val();
+  //     var data = {};
+  //     if (newData.price) data.price = newData.price;
+  //     if (newData.good) data.good = newData.good;
+  //     if (newData.bad) data.bad = newData.bad;
+  //     if (newData.reply) data.reply = newData.reply;
+  //     if (newData.read) data.read = newData.read;
+  //     if (newData.title) data.title = newData.title;
+  //     if (newData.soldOut) data.soldOut = newData.soldOut;
+  //     if (newData.imgSrc) data.imgSrc = newData.imgSrc;
+
+  //     if (item) {
+  //       this.database.ref(this.path + '/' + key).update(data);
+  //     } else {
+  //       if (newData.url) data.url = newData.url;
+  //       if (newData.dateFormat) data.dateFormat = newData.dateFormat;
+  //       this.database.ref(this.path + '/' + key).set(data);
+  //     }
+  //   });
+  // }
+
+  saveData(newData) {   
+    var data = {};
+    if (newData.price) data.price = newData.price;
+    if (newData.good) data.good = newData.good;
+    if (newData.bad) data.bad = newData.bad;
+    if (newData.reply) data.reply = newData.reply;
+    if (newData.read) data.read = newData.read;
+    if (newData.title) data.title = newData.title;
+    if (newData.soldOut) data.soldOut = newData.soldOut;
+    if (newData.imgSrc) data.imgSrc = newData.imgSrc;
+    if (newData.url) data.url = newData.url;
+    if (newData.dateFormat) data.dateFormat = newData.dateFormat;
 
     var key = this.getKey(newData);
-    this.database.ref(this.path + "/" + key).once('value', (snapshot) => {
-
-      var item = snapshot.val();
-      var data = {};
-      if (newData.price) data.price = newData.price;
-      if (newData.good) data.good = newData.good;
-      if (newData.bad) data.bad = newData.bad;
-      if (newData.reply) data.reply = newData.reply;
-      if (newData.read) data.read = newData.read;
-      if (newData.title) data.title = newData.title;
-      if (newData.soldOut) data.soldOut = newData.soldOut;
-      if (newData.imgSrc) data.imgSrc = newData.imgSrc;
-
-      if (item) {
-        this.database.ref(this.path + '/' + key).update(data);
-      } else {
-        if (newData.url) data.url = newData.url;
-        if (newData.dateFormat) data.dateFormat = newData.dateFormat;
-        this.database.ref(this.path + '/' + key).set(data);
-      }
-    });
+    this.database.ref(this.path + '/' + key).set(data);
   }
+
+
 
   getKey(data) {
     let url = data.url;
@@ -209,24 +239,26 @@ export class ShopOverseas2Page {
 
   // 아이템들을 보여준다.
   showItems() {
-    this.itemsShow = [];
-    var item;
-    for (var url in this.items) {
-      item = this.items[url];
-      this.itemsShow.push(item);
-    }
+    //this.itemsShow = [];
+    this.ngZone.run(() => { });
 
-    this.ngZone.run(() => {
-      this.itemsShow.sort((a, b) => {
-        if (a.dateFormat < b.dateFormat) {
-          return 1;
-        } else if (a.dateFormat > b.dateFormat) {
-          return -1;
-        } else {
-          return 0;
-        }
-      });
-    });
+    // var item;
+    // for (var url in this.items) {
+    //   item = this.items[url];
+    //   this.itemsShow.push(item);
+    // }
+
+    // this.ngZone.run(() => {
+    //   this.itemsShow.sort((a, b) => {
+    //     if (a.dateFormat < b.dateFormat) {
+    //       return 1;
+    //     } else if (a.dateFormat > b.dateFormat) {
+    //       return -1;
+    //     } else {
+    //       return 0;
+    //     }
+    //   });
+    // });
   }
 
 
@@ -346,8 +378,8 @@ export class ShopOverseas2Page {
       var elements = doc.querySelectorAll('div.tbl_head01 tr');
 
       for (var i in elements) {
+        if (i == 'length') break;
         var item = {};
-        debugger;
         item.imgSrc = elements[i].querySelector('td.td_img img').src; // 이미지
         item.url = elements[i].querySelector('td.td_img a').getAttribute('href'); //URL
 
@@ -374,7 +406,7 @@ export class ShopOverseas2Page {
             item.good = spans[12].textContent.trim();
             item.bad = spans[15].textContent.trim();
             item.reply = spans[18].textContent.trim();
-          }else{
+          } else {
             item.read = spans[10].textContent.trim();
             item.good = spans[13].textContent.trim();
             item.bad = spans[16].textContent.trim();

@@ -32,7 +32,7 @@ export class Firebase {
     if (firebase.apps.length > 0) {
       this.fb = firebase;
     } else {
-      var config = globalConfig.firebase;
+      var config = globalconfig.firebase.config;
       this.fb = firebase.initializeApp(config);
     }
     this.database = this.fb.database();

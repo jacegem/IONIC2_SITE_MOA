@@ -9,4 +9,4 @@ plugins/
 .DS_Store
 Thumbs.db
 
-global.config.js
+globalconfig.js
