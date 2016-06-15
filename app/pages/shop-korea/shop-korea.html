@@ -27,11 +27,11 @@
           <h3 *ngIf="!item.soldOut">{{item.title}}</h3>
           <h3 [ngClass]="{soldOut:item.soldOut}" *ngIf="item.soldOut">종료:{{item.title}}</h3>
             <p>
-              <span *ngIf="item.price"> <ion-icon name="pricetag" > ${{item.price}} </ion-icon></span>
+              <span *ngIf="item.price"> <ion-icon name="pricetag" > {{item.price}} </ion-icon></span>
               <span *ngIf="item.reply" > <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
               <span *ngIf="item.good" > <ion-icon name="heart" > {{item.good}} </ion-icon></span>              
               <span *ngIf="item.read" > <ion-icon name="book" > {{item.read}} </ion-icon></span>
-              <span *ngIf="item.dateFormat"> <ion-icon name="time" > {{item.dateFormat}} </ion-icon></span>
+              <span *ngIf="item.dateFormat"> <ion-icon name="time" > {{item.dateFormat | shortDate}} </ion-icon></span>
             </p>
         </button>
     </ion-item-sliding>

@@ -2,6 +2,7 @@ import {Page, Platform, NavController} from 'ionic-angular';
 import {Http} from 'angular2/http';
 import {NgZone} from 'angular2/core';
 import {Firebase} from '../../providers/firebase/firebase';
+import {ShortDate} from '../../pipes/shortDate'
 /*
   Generated class for the ShopKoreaPage page.
 
@@ -11,6 +12,7 @@ import {Firebase} from '../../providers/firebase/firebase';
 @Page({
   templateUrl: 'build/pages/shop-korea/shop-korea.html',
   providers: [Firebase],
+  pipes: [ShortDate],
 })
 export class ShopKoreaPage {
   static get parameters() {

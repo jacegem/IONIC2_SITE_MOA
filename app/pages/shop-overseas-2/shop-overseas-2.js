@@ -4,6 +4,7 @@ import {InAppBrowser} from 'ionic-native';
 import {ArraySort} from '../../pipes/arraySort';
 import {NgZone} from 'angular2/core';
 import {Firebase} from '../../providers/firebase/firebase';
+
 /*
   Generated class for the ShopOverseas2Page page.
 
