@@ -24,8 +24,8 @@ class MyApp {
 
     // used for an example of ngFor and navigation
     this.pages = [
-      { title: '해외구매2', component: ShopOverseas2Page },      
-      { title: '해외구매', component: ShopOverseasPage },
+      { title: '해외구매', component: ShopOverseas2Page },      
+      //{ title: '해외구매', component: ShopOverseasPage },
       { title: '국내구매', component: ShopKoreaPage },
       { title: 'Bamboo', component: BambooPage },
       { title: 'Getting Started', component: GettingStartedPage },

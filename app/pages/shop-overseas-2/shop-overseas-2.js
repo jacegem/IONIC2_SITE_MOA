@@ -36,9 +36,9 @@ export class ShopOverseas2Page {
     this.path = '2016/site-moa/shop-overseas';  // 저장하는 공간 주소
 
     this.init();
-    this.getItems();
     this.getRealData();
-    //this.getAddedData();
+
+    setInterval(this.getItems(), 3000);
   }
 
   init() {
@@ -47,13 +47,13 @@ export class ShopOverseas2Page {
     this.items = {};          // 아이템을 담는곳
     this.infoMap = {};
     this.itemsShow = [];      // 출력할 아이템을 담는 곳
-    this.lastDateFormat = ''  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다.
+    this.lastDateFormat = '1111-01-01 11:11';  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다.
   }
 
   getAddedData() {
     this.database.ref(this.path).on('child_added', (snapshot) => {
       var item = snapshot.val();
-      if (length(this.lastDateFormat) > 0 && item.dateFormat < this.lastDateFormat) return;
+      if (item.dateFormat < this.lastDateFormat) return;
 
       this.items[item.url] = item;
       this.showItems();
@@ -66,23 +66,29 @@ export class ShopOverseas2Page {
 
     this.database.ref(this.path).orderByChild("dateFormat").limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
-      if (items) this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
+
+      if (items)
+        this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
+
       for (var key in items) {
         var item = items[key];
         this.items[item.url] = item;
       }
       this.showItems();
-      debugger;
+
       if (event) event.complete();
     });
   }
 
   // 데이터를 추가적으로 가져온다. 
   getItemsMore(infiniteScroll) {
+
     this.database.ref(this.path).orderByChild("dateFormat").endAt(this.lastDateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
-      debugger;
-      if (items) this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
+
+      if (items)
+        this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
+
       for (var key in items) {
         var item = items[key];
         this.items[item.url] = item;
@@ -96,6 +102,7 @@ export class ShopOverseas2Page {
     this.loadPpomppu(this.sitePage);
     this.loadClien(this.sitePage);
     this.loadDdanzi(this.sitePage);
+    this.loadDealbada(this.sitePage);
     this.sitePage++;
   }
 
@@ -154,7 +161,6 @@ export class ShopOverseas2Page {
           let match = pattern.exec(dateText);
           let date = this.getDate(match[1]);
           item.dateFormat = this.getDateFormat(date);
-          this.items[url] = item;
           this.saveData(item);
         });
       }
@@ -170,10 +176,11 @@ export class ShopOverseas2Page {
       var data = {};
       if (newData.price) data.price = newData.price;
       if (newData.good) data.good = newData.good;
+      if (newData.bad) data.bad = newData.bad;
       if (newData.reply) data.reply = newData.reply;
       if (newData.read) data.read = newData.read;
       if (newData.title) data.title = newData.title;
-      if (newData.soldOut) data.soldOut = newData.sodlOut;
+      if (newData.soldOut) data.soldOut = newData.soldOut;
       if (newData.imgSrc) data.imgSrc = newData.imgSrc;
 
       if (item) {
@@ -188,13 +195,13 @@ export class ShopOverseas2Page {
 
   getKey(data) {
     let url = data.url;
-    
-    let pattern = /(.+)&page=\d+(.+)/;
+
+    let pattern = /(.+)&page=\d+(.*)/;
     let match = pattern.exec(url);
     if (match) url = match[1] + match[2];
 
     let rep = url.replace(/\./g, "_dot_")
-                 .replace(/\//g, "_slash_");    
+      .replace(/\//g, "_slash_");
     return rep;
   }
 
@@ -279,7 +286,6 @@ export class ShopOverseas2Page {
           }
 
           if (item.url) {
-            this.items[url] = item;
             this.saveData(item);
           }
         });
@@ -311,9 +317,9 @@ export class ShopOverseas2Page {
       mi = match[4];
     }
 
-    pattern = /(\d{4}).(\d{2}).(\d{2}) (\d{2}):(\d{2})/;  //2016-06-02 13:43
+    pattern = /(\d{4}).(\d{2}).(\d{2}) (\d{2}):(\d{2})(:\d{2})?/;  //2016-06-02 13:43
     match = pattern.exec(dateStr);
-    debugger;
+
     if (match) {
       yyyy = match[1];
       mm = match[2] - 1;
@@ -330,6 +336,58 @@ export class ShopOverseas2Page {
       mi = match[2];
     }
     return new Date(yyyy, mm, dd, hh, mi);
+  }
+
+  loadDealbada(page) {
+    var url = "http://www.dealbada.com/bbs/board.php?bo_table=deal_oversea&page=" + page;
+    this.http.get(url).subscribe(data => {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(data.text(), "text/html");
+      var elements = doc.querySelectorAll('div.tbl_head01 tr');
+
+      for (var i in elements) {
+        var item = {};
+        debugger;
+        item.imgSrc = elements[i].querySelector('td.td_img img').src; // 이미지
+        item.url = elements[i].querySelector('td.td_img a').getAttribute('href'); //URL
+
+        this.infoMap[item.url] = item;
+
+        this.http.get(item.url).subscribe(data => {
+          let parser = new DOMParser();
+          let url = data.url;
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
+
+          let doc = parser.parseFromString(data.text(), "text/html");
+          let articleSection = doc.querySelector('#bo_v_info');
+          let spans = articleSection.querySelectorAll('div span');
+          item.title = spans[0].textContent.trim();
+          item.date = spans[7].textContent.trim();
+          item.date = this.getDate(item.date);
+          item.dateFormat = this.getDateFormat(item.date);
+
+          item.read = spans[9].textContent.trim();
+          var pattern = /\d+/;
+          var match = pattern.exec(item.read);
+          if (match) {
+            item.good = spans[12].textContent.trim();
+            item.bad = spans[15].textContent.trim();
+            item.reply = spans[18].textContent.trim();
+          }else{
+            item.read = spans[10].textContent.trim();
+            item.good = spans[13].textContent.trim();
+            item.bad = spans[16].textContent.trim();
+            item.reply = spans[19].textContent.trim();
+          }
+
+          if (item.url) {
+            this.saveData(item);
+          }
+        });
+
+      }
+    });
   }
 
   loadDdanzi(page) {
@@ -369,14 +427,13 @@ export class ShopOverseas2Page {
           let doc = parser.parseFromString(data.text(), "text/html");
           let date = doc.querySelector('span.ex').textContent.trim();
           let pattern = /(\d{4}).(\d{2}).(\d{2}) (\d{2}):(\d{2})/;  //2016.06.02 13:43   // 2016.06.09 18:29:53
-          debugger;
+
           var match = pattern.exec(date);
           if (match) {
             item.date = this.getDate(match[0]);
             item.dateFormat = this.getDateFormat(item.date);
           }
           if (item.url) {
-            this.items[url] = item;
             this.saveData(item);
           }
 

@@ -8,7 +8,7 @@
   <button menuToggle>
     <ion-icon name="menu"></ion-icon>
   </button>
-  <ion-title>해외구매2</ion-title>
+  <ion-title>해외구매</ion-title>
 </ion-navbar>
 
 <ion-content padding class="shop-overseas-2">
@@ -18,7 +18,7 @@
       </ion-refresher-content>
     </ion-refresher>
     <ion-item *ngIf="itemsShow.length == 0">
-      데이터 조회중 입니다. {{items.length}} 개 데이터 수집중
+      <ion-spinner></ion-spinner>데이터 조회중 입니다.
     </ion-item>
     <ion-item-sliding *ngFor="#item of itemsShow">
       <button full ion-item (click)="openLink(item)">
@@ -31,9 +31,9 @@
             <p>
               <span *ngIf="item.price"> <ion-icon name="pricetag" > ${{item.price}} </ion-icon></span>
               <span *ngIf="item.reply" > <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
-              <span *ngIf="item.good" > <ion-icon name="heart" > {{item.good}} </ion-icon></span>
-              <span *ngIf="item.dateFormat"> <ion-icon name="time" > {{item.dateFormat}} </ion-icon></span>
+              <span *ngIf="item.good" > <ion-icon name="heart" > {{item.good}} </ion-icon></span>              
               <span *ngIf="item.read" > <ion-icon name="book" > {{item.read}} </ion-icon></span>
+              <span *ngIf="item.dateFormat"> <ion-icon name="time" > {{item.dateFormat}} </ion-icon></span>
             </p>
         </button>
     </ion-item-sliding>
