@@ -10,9 +10,9 @@ import 'rxjs/add/operator/map';
 */
 @Injectable()
 export class Shop {
-  static get parameters(){
+  static get parameters() {
     return [[Http]]
-  }  
+  }
 
   constructor(http) {
     this.http = http;
@@ -38,6 +38,58 @@ export class Shop {
           this.data = data;
           resolve(this.data);
         });
+    });
+  }
+
+  saveDealbadaData(url, path) {
+    this.http.get(url).subscribe(data => {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(data.text(), "text/html");
+      var elements = doc.querySelectorAll('div.tbl_head01 tr');
+
+      for (var i in elements) {
+        if (i == 'length') break;
+        var item = {};
+        item.imgSrc = elements[i].querySelector('td.td_img img'); // 이미지
+        if (item.imgSrc) item.imgSrc = item.imgSrc.src;
+        item.url = elements[i].querySelector('td.td_img a');
+        if (item.url) item.url = item.url.getAttribute('href'); //URL
+
+        this.infoMap[item.url] = item;
+
+        this.http.get(item.url).subscribe(data => {
+          let parser = new DOMParser();
+          let url = data.url;
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
+
+          let doc = parser.parseFromString(data.text(), "text/html");
+          let articleSection = doc.querySelector('#bo_v_info');
+          let spans = articleSection.querySelectorAll('div span');
+          item.title = spans[0].textContent.trim();
+          item.date = spans[7].textContent.trim();
+          item.date = this.getDate(item.date);
+          item.dateFormat = this.getDateFormat(item.date);
+
+          item.read = spans[9].textContent.trim();
+          var pattern = /\d+/;
+          var match = pattern.exec(item.read);
+          if (match) {
+            item.good = spans[12].textContent.trim();
+            item.bad = spans[15].textContent.trim();
+            item.reply = spans[18].textContent.trim();
+          } else {
+            item.read = spans[10].textContent.trim();
+            item.good = spans[13].textContent.trim();
+            item.bad = spans[16].textContent.trim();
+            item.reply = spans[19].textContent.trim();
+          }
+
+          if (item.url) {
+            this.saveData(item);
+          }
+        });
+      }
     });
   }
 }

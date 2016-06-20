@@ -2,8 +2,9 @@ import {Page, Platform, NavController} from 'ionic-angular';
 import {Http} from 'angular2/http';
 import {NgZone} from 'angular2/core';
 import {Firebase} from '../../providers/firebase/firebase';
-import {ShortDate} from '../../pipes/shortDate';
-import {Default} from '../../pipes/default';
+import {Shop} from '../../providers/shop/shop';
+import {ShortDate} from '../../pipes/shortDate'
+import {Default} from '../../pipes/default'
 /*
   Generated class for the ShopKoreaPage page.
 
@@ -12,31 +13,35 @@ import {Default} from '../../pipes/default';
 */
 @Page({
   templateUrl: 'build/pages/shop-korea/shop-korea.html',
-  providers: [Firebase],
+  providers: [[Firebase], [Shop]],
   pipes: [[ShortDate], [Default]],
 })
 export class ShopKoreaPage {
   static get parameters() {
-    return [[NavController], [Http], [Platform], [NgZone], [Firebase]];
+    return [[NavController], [Http], [Platform], [NgZone], [Firebase], [Shop]];
   }
 
-  constructor(nav, http, platform, ngZone, firebase) {
+  constructor(nav, http, platform, ngZone, firebase, pShop) {
     this.nav = nav;           // 기본으로 있음.
     this.http = http;         // http 요청을 위해 사용
     this.platform = platform;
     this.ngZone = ngZone;
     this.firebase = firebase; // firebase 사용
     this.database = firebase.getDatabase();
+    this.pShop = pShop;
     this.path = '2016/site-moa/shop-korea';  // 저장하는 공간 주소
+    this.sortValue = 'dateFormat';
 
     this.init();
     this.getItems();
     //this.getRealData();
+
   }
 
   init() {
     this.sitePage = 1;        // 사이트 페이지
-    this.pageRow = 50;    
+    this.pageRow = 50;
+    this.infoMap = {};
     this.itemsShow = [];      // 출력할 아이템을 담는 곳
     this.lastItem = {};
   }
@@ -80,7 +85,7 @@ export class ShopKoreaPage {
   // 최초에 필요한 데이터를 가져온다. 
   getItems(event) {
     this.itemsShow = [];
-    this.database.ref(this.path).orderByChild("dateFormat").limitToLast(this.pageRow).once('value', (snapshot) => {
+    this.database.ref(this.path).orderByChild(this.sortValue).limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
       this.lastItem = items[Object.keys(items)[0]];
 
@@ -94,7 +99,7 @@ export class ShopKoreaPage {
 
   // 데이터를 추가적으로 가져온다. 
   getItemsMore(infiniteScroll) {
-    this.database.ref(this.path).orderByChild("dateFormat").endAt(this.lastItem.dateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
+    this.database.ref(this.path).orderByChild(this.sortValue).endAt(this.lastItem.dateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
 
       var moreItems = [];
@@ -108,7 +113,6 @@ export class ShopKoreaPage {
 
       this.lastItem = items[Object.keys(items)[0]];
       if (infiniteScroll) infiniteScroll.complete();
-
       this.getRealData();
     });
   }
@@ -133,14 +137,25 @@ export class ShopKoreaPage {
       for (var i in elements) {
         if (i == 'length') break;
         var item = {};
-        item.imgSrc = elements[i].querySelector('td.td_img a img'); // 이미지
-        if (item.imgSrc) item.imgSrc = item.imgSrc.src;
+        item.imgSrc = elements[i].querySelector('td.td_img img'); // 이미지
+        if (item.imgSrc.src) {
+          item.imgSrc = item.imgSrc.src;
+        } else {
+          if (item.imgSrc.hasAttribute('data-cfsrc')) item.imgSrc = item.imgSrc.getAttribute('data-cfsrc');
+        }
+
         item.url = elements[i].querySelector('td.td_img a');
         if (item.url) item.url = item.url.getAttribute('href'); //URL
+        if (!item.url) continue;
+
+
+        this.infoMap[item.url] = item;
 
         this.http.get(item.url).subscribe(data => {
           let parser = new DOMParser();
           let url = data.url;
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
 
           let doc = parser.parseFromString(data.text(), "text/html");
           let articleSection = doc.querySelector('#bo_v_info');
@@ -165,6 +180,7 @@ export class ShopKoreaPage {
           }
 
           if (item.url) {
+            debugger;
             this.saveData(item);
           }
         });
@@ -199,10 +215,13 @@ export class ShopKoreaPage {
         item.price = elements[i].querySelector('div.price span').textContent.trim();
         item.soldOut = elements[i].querySelector('span.title img[src$="end_icon.png"]');
 
+        this.infoMap[item.url] = item;
 
         this.http.get(item.url).subscribe(data => {
           let parser = new DOMParser();
           let url = data.url;
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
 
           let doc = parser.parseFromString(data.text(), "text/html");
           let date = doc.querySelector('span.ex').textContent.trim();
@@ -248,10 +267,12 @@ export class ShopKoreaPage {
         if (item.title.startsWith('[공지]')) continue;
         item.reply = elements[i].querySelector('span.lst_reply').textContent.trim();
 
-
+        this.infoMap[item.url] = item;
         this.http.get(item.url).subscribe(data => {
           let parser = new DOMParser();
           let url = data.url;
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
 
           let doc = parser.parseFromString(data.text(), "text/html");
           item.imgSrc = doc.querySelector('div.post_ct img[src]');
@@ -298,12 +319,16 @@ export class ShopKoreaPage {
         item.url = "http://m.ppomppu.co.kr/new/" + elements[i].querySelector('a[href]').getAttribute('href'); // url
         item.soldOut = elements[i].querySelector('span.title span');
 
-
+        this.infoMap[item.url] = item;
         this.http.get(item.url).subscribe(data => {
           let url = data.url;
           let parser = new DOMParser();
           let doc = parser.parseFromString(data.text(), "text/html");
           let dateText = doc.querySelector('div.info span.hi').textContent.trim();
+
+          let item = this.infoMap[url];
+          delete this.infoMap[url];
+
           let pattern = /(\d{4}-\d{2}-\d{2} \d{2}:\d{2})/;
           let match = pattern.exec(dateText);
           let date = this.getDate(match[1]);

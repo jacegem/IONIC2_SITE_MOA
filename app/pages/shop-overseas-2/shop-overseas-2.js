@@ -404,12 +404,19 @@ export class ShopOverseas2Page {
         if (i == 'length') break;
         var item = {};
         item.imgSrc = elements[i].querySelector('td.td_img a img'); // 이미지
-        if (item.imgSrc) item.imgSrc = item.imgSrc.src;
-        item.url = elements[i].querySelector('td.td_img a');
-        if (item.url) item.url = item.url.getAttribute('href'); //URL
+        if (item.imgSrc.src) {
+          item.imgSrc = item.imgSrc.src;
+        }else{
+          if (item.imgSrc.hasAttribute('data-cfsrc')) item.imgSrc = item.imgSrc.getAttribute('data-cfsrc');
+        }
+        
 
         debugger;
-
+        
+        item.url = elements[i].querySelector('td.td_img a');
+        if (item.url) item.url = item.url.getAttribute('href'); //URL
+        if (!item.url) continue;
+        
         this.infoMap[item.url] = item;
 
         this.http.get(item.url).subscribe(data => {
