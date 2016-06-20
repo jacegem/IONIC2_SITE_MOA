@@ -4,7 +4,8 @@ import {InAppBrowser} from 'ionic-native';
 import {ArraySort} from '../../pipes/arraySort';
 import {NgZone} from 'angular2/core';
 import {Firebase} from '../../providers/firebase/firebase';
-
+import {ShortDate} from '../../pipes/shortDate'
+import {Default} from '../../pipes/default'
 /*
   Generated class for the ShopOverseas2Page page.
 
@@ -14,6 +15,7 @@ import {Firebase} from '../../providers/firebase/firebase';
 @Page({
   templateUrl: 'build/pages/shop-overseas-2/shop-overseas-2.html',
   providers: [Firebase],
+  pipes: [[ShortDate], [Default]],
 })
 export class ShopOverseas2Page {
   static get parameters() {
@@ -38,18 +40,15 @@ export class ShopOverseas2Page {
 
     this.init();
     this.getItems();
-    this.getRealData();
-    
     //setInterval(this.getItems(), 3000);
   }
 
   init() {
     this.sitePage = 1;        // 사이트 페이지
     this.pageRow = 50;
-    this.items = {};          // 아이템을 담는곳
     this.infoMap = {};
     this.itemsShow = [];      // 출력할 아이템을 담는 곳
-    this.lastDateFormat = '1111-01-01 11:11';  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다.
+    this.lastItem = {};
   }
 
   // getAddedData() {
@@ -65,48 +64,37 @@ export class ShopOverseas2Page {
   // 최초에 필요한 데이터를 가져온다. 
   getItems(event) {
     this.itemsShow = [];
-
     this.database.ref(this.path).orderByChild("dateFormat").limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
+      this.lastItem = items[Object.keys(items)[0]];
 
-      if (items)
-        this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
-
-      for (var key in items) {
-        var item = items[key];
-        this.itemsShow.unshift(item);
-        //this.items[item.url] = item;
-      }
+      for (var key in items) this.itemsShow.unshift(items[key]);
       this.showItems();
 
       if (event) event.complete();
+
+      this.getRealData();
     });
   }
 
   // 데이터를 추가적으로 가져온다. 
   getItemsMore(infiniteScroll) {
-
-    this.database.ref(this.path).orderByChild("dateFormat").endAt(this.lastDateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
+    this.database.ref(this.path).orderByChild("dateFormat").endAt(this.lastItem.dateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
-
-      if (items)
-        this.lastDateFormat = items[Object.keys(items)[0]].dateFormat;
 
       var moreItems = [];
       for (var key in items) {
-        var item = items[key];
-        moreItems.unshift(item);
-        //this.items[item.url] = item;
+        if (this.lastItem.url != items[key].url) {
+          moreItems.unshift(items[key]);
+        }
       }
-
-      for (var i in moreItems) {
-        this.itemsShow.push(moreItems[i]);
-      }
-
+      for (var i in moreItems) this.itemsShow.push(moreItems[i]);
       this.showItems();
 
-      if (infiniteScroll)
-        infiniteScroll.complete();
+      this.lastItem = items[Object.keys(items)[0]];
+      if (infiniteScroll) infiniteScroll.complete();
+
+      this.getRealData();
     });
   }
 
@@ -121,7 +109,7 @@ export class ShopOverseas2Page {
   doInfinite(infiniteScroll) {
     // firebase 에서 더 가져온다.
     this.getItemsMore(infiniteScroll);
-    this.getRealData();
+    //this.getRealData();
 
     return;
   }
@@ -132,7 +120,7 @@ export class ShopOverseas2Page {
     // }
     this.init();
     this.getItems(event);
-    this.getRealData();
+    //this.getRealData();
   }
 
   loadPpomppu(page) {
@@ -243,18 +231,17 @@ export class ShopOverseas2Page {
     if (item) this.itemsShow.unshift(item);
 
     this.ngZone.run(() => {
-      this.ngZone.run(() => {
-        this.itemsShow.sort((a, b) => {
-          if (a.dateFormat < b.dateFormat) {
-            return 1;
-          } else if (a.dateFormat > b.dateFormat) {
-            return -1;
-          } else {
-            return 0;
-          }
-        });
+      this.itemsShow.sort((a, b) => {
+        if (a.dateFormat < b.dateFormat) {
+          return 1;
+        } else if (a.dateFormat > b.dateFormat) {
+          return -1;
+        } else {
+          return 0;
+        }
       });
     });
+
   }
 
 
@@ -416,8 +403,12 @@ export class ShopOverseas2Page {
       for (var i in elements) {
         if (i == 'length') break;
         var item = {};
-        item.imgSrc = elements[i].querySelector('td.td_img img').src; // 이미지
-        item.url = elements[i].querySelector('td.td_img a').getAttribute('href'); //URL
+        item.imgSrc = elements[i].querySelector('td.td_img a img'); // 이미지
+        if (item.imgSrc) item.imgSrc = item.imgSrc.src;
+        item.url = elements[i].querySelector('td.td_img a');
+        if (item.url) item.url = item.url.getAttribute('href'); //URL
+
+        debugger;
 
         this.infoMap[item.url] = item;
 
@@ -450,7 +441,7 @@ export class ShopOverseas2Page {
           }
 
           if (item.url) {
-            this.saveData(item);
+            this.saveData(item);            
           }
         });
 

@@ -33,7 +33,7 @@
               <span *ngIf="item.reply" > <ion-icon name="chatboxes"> {{item.reply}} </ion-icon></span>
               <span *ngIf="item.good" > <ion-icon name="heart" > {{item.good}} </ion-icon></span>              
               <span *ngIf="item.read" > <ion-icon name="book" > {{item.read}} </ion-icon></span>
-              <span *ngIf="item.dateFormat"> <ion-icon name="time" > {{item.dateFormat}} </ion-icon></span>
+              <span *ngIf="item.dateFormat"> <ion-icon name="time" > {{item.dateFormat | shortDate}} </ion-icon></span>
             </p>
         </button>
     </ion-item-sliding>
