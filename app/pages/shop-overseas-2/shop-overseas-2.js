@@ -37,10 +37,10 @@ export class ShopOverseas2Page {
     this.path = '2016/site-moa/shop-overseas';  // 저장하는 공간 주소
 
     this.init();
+    this.getItems();
     this.getRealData();
     
-    //this.getItems();
-    setInterval(this.getItems(), 3000);
+    //setInterval(this.getItems(), 3000);
   }
 
   init() {
@@ -205,7 +205,7 @@ export class ShopOverseas2Page {
   //   });
   // }
 
-  saveData(newData) {   
+  saveData(newData) {
     var data = {};
     if (newData.price) data.price = newData.price;
     if (newData.good) data.good = newData.good;
@@ -220,6 +220,41 @@ export class ShopOverseas2Page {
 
     var key = this.getKey(newData);
     this.database.ref(this.path + '/' + key).set(data);
+
+    // 마지막 날짜보다 전이고, 없는 데이터 라면, 리스트에 추가한다.
+    let bFound = false;
+    if (newData.datFormat > this.lastItem.dateFormat) {
+      for (let i in this.itemsShow) {
+        let item = this.itemsShow[i];
+        if (item.url == newData.url) {
+          this.itemsShow[i] = newData;
+          bFound = true;
+          break;
+        }
+      }
+      if (bFound == false) {
+        this.sortList(newData);
+      }
+    }
+  }
+
+  // 아이템들을 보여준다.
+  sortList(item) {
+    if (item) this.itemsShow.unshift(item);
+
+    this.ngZone.run(() => {
+      this.ngZone.run(() => {
+        this.itemsShow.sort((a, b) => {
+          if (a.dateFormat < b.dateFormat) {
+            return 1;
+          } else if (a.dateFormat > b.dateFormat) {
+            return -1;
+          } else {
+            return 0;
+          }
+        });
+      });
+    });
   }
 
 

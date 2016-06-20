@@ -23,7 +23,7 @@
     </ion-item>
     <ion-item-sliding *ngFor="#item of itemsShow">
       <button full ion-item (click)="openLink(item)">
-        <img class="small" item-left src="{{item.imgSrc}}" />
+        <img class="small" item-left src="{{item.imgSrc | defaultImgSrc}}" />
           <h3 *ngIf="!item.soldOut">{{item.title}}</h3>
           <h3 [ngClass]="{soldOut:item.soldOut}" *ngIf="item.soldOut">종료:{{item.title}}</h3>
             <p>

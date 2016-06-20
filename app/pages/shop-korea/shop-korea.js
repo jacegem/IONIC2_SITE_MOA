@@ -29,9 +29,29 @@ export class ShopKoreaPage {
     this.path = '2016/site-moa/shop-korea';  // 저장하는 공간 주소
 
     this.init();
+    this.getItems();
     this.getRealData();
-    setInterval(this.getItems(), 3000);
   }
+
+  init() {
+    this.sitePage = 1;        // 사이트 페이지
+    this.pageRow = 50;
+    this.infoMap = {};
+    this.itemsShow = [];      // 출력할 아이템을 담는 곳
+    this.lastItem = {};
+  }
+
+
+  // getAddedData() {
+  //   this.database.ref(this.path).on('child_added', (snapshot) => {
+  //     var item = snapshot.val();
+  //     if (item.dateFormat < this.lastItem.dateFormat) return;
+
+  //     this.items[item.url] = item;
+  //     this.showItems();
+  //   });
+  // }
+
 
   doInfinite(infiniteScroll) {
     // firebase 에서 더 가져온다.
@@ -41,23 +61,18 @@ export class ShopKoreaPage {
 
   doRefresh(event) {
     this.init();
-    this.getItems(event);    
-    setInterval(this.getRealData(), 3000);
+    this.getItems(event);
+    this.getRealData();
   }
 
   // 링크 페이지를 연다.
   openLink(item) {
-    this.platform.ready().then(() => { window.open(item.url, '_blank'); });
+    this.platform.ready().then(() => { 
+      //window.open(item.url, '_blank'); 
+      window.open(item.url, '_self');
+    });
   }
 
-  init() {
-    this.sitePage = 1;        // 사이트 페이지
-    this.pageRow = 50;
-    this.infoMap = {};
-    this.itemsShow = [];      // 출력할 아이템을 담는 곳
-    this.lastDateFormat = '1111-01-01 11:11';  // 지속적으로 데이터를 가져오기 위해 가져온 마지막 시각을 기록한다.
-    this.lastItem = {};
-  }
 
   showItems() {
     this.ngZone.run(() => { });
@@ -324,6 +339,41 @@ export class ShopKoreaPage {
 
     var key = this.getKey(newData);
     this.database.ref(this.path + '/' + key).set(data);
+
+    // 마지막 날짜보다 전이고, 없는 데이터 라면, 리스트에 추가한다.
+    let bFound = false;
+    if (newData.datFormat > this.lastItem.dateFormat) {
+      for (let i in this.itemsShow) {
+        let item = this.itemsShow[i];
+        if (item.url == newData.url) {
+          this.itemsShow[i] = newData;
+          bFound = true;
+          break;
+        }
+      }
+      if (bFound == false) {
+        this.sortList(newData);
+      }
+    }
+  }
+
+  // 아이템들을 보여준다.
+  sortList(item) {
+    if (item) this.itemsShow.unshift(item);
+
+    this.ngZone.run(() => {
+      this.ngZone.run(() => {
+        this.itemsShow.sort((a, b) => {
+          if (a.dateFormat < b.dateFormat) {
+            return 1;
+          } else if (a.dateFormat > b.dateFormat) {
+            return -1;
+          } else {
+            return 0;
+          }
+        });
+      });
+    });
   }
 
   getKey(data) {
