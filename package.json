@@ -34,5 +34,7 @@
     "cordova-plugin-admobpro",
     "cordova-plugin-videoplayer"
   ],
-  "cordovaPlatforms": []
+  "cordovaPlatforms": [
+    "android"
+  ]
 }

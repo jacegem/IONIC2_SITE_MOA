@@ -66,6 +66,8 @@ export class ShopOverseas2Page {
     this.itemsShow = [];
     this.database.ref(this.path).orderByChild("dateFormat").limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
+      items = this.sortList(items);
+
       this.lastItem = items[Object.keys(items)[0]];
 
       for (var key in items) this.itemsShow.unshift(items[key]);
@@ -81,7 +83,7 @@ export class ShopOverseas2Page {
   getItemsMore(infiniteScroll) {
     this.database.ref(this.path).orderByChild("dateFormat").endAt(this.lastItem.dateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
-
+      items = this.sortList(items);
       var moreItems = [];
       for (var key in items) {
         if (this.lastItem.url != items[key].url) {
@@ -226,22 +228,22 @@ export class ShopOverseas2Page {
     }
   }
 
-  // 아이템들을 보여준다.
-  sortList(item) {
-    if (item) this.itemsShow.unshift(item);
-
-    this.ngZone.run(() => {
-      this.itemsShow.sort((a, b) => {
-        if (a.dateFormat < b.dateFormat) {
-          return 1;
-        } else if (a.dateFormat > b.dateFormat) {
-          return -1;
-        } else {
-          return 0;
-        }
-      });
+   // 아이템들을 보여준다.
+  sortList(obj) {
+    var array = $.map(obj, function(value, index) {
+      return [value];
     });
 
+    array.sort((a, b) => {
+      if (a.dateFormat > b.dateFormat) {
+        return 1;
+      } else if (a.dateFormat < b.dateFormat) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+    return array;
   }
 
 

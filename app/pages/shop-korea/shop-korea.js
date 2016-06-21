@@ -35,7 +35,6 @@ export class ShopKoreaPage {
     this.init();
     this.getItems();
     //this.getRealData();
-
   }
 
   init() {
@@ -44,6 +43,7 @@ export class ShopKoreaPage {
     this.infoMap = {};
     this.itemsShow = [];      // 출력할 아이템을 담는 곳
     this.lastItem = {};
+    this.addedItems = {};
   }
 
 
@@ -86,10 +86,15 @@ export class ShopKoreaPage {
   getItems(event) {
     this.itemsShow = [];
     this.database.ref(this.path).orderByChild(this.sortValue).limitToLast(this.pageRow).once('value', (snapshot) => {
-      var items = snapshot.val();
+      var items = snapshot.val();      
+      debugger;
+      items = this.sortList(items);
       this.lastItem = items[Object.keys(items)[0]];
 
-      for (var key in items) this.itemsShow.unshift(items[key]);
+      for (var key in items) {
+        this.itemsShow.unshift(items[key]);
+        this.addedItems[items[key].url] = 1;
+      }
       this.showItems();
 
       if (event) event.complete();
@@ -101,12 +106,13 @@ export class ShopKoreaPage {
   getItemsMore(infiniteScroll) {
     this.database.ref(this.path).orderByChild(this.sortValue).endAt(this.lastItem.dateFormat).limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();
-
+      items = this.sortList(items);
       var moreItems = [];
       for (var key in items) {
         if (this.lastItem.url != items[key].url) {
           moreItems.unshift(items[key]);
         }
+        this.addedItems[items[key].url] = 1;
       }
       for (var i in moreItems) this.itemsShow.push(moreItems[i]);
       this.showItems();
@@ -355,37 +361,47 @@ export class ShopKoreaPage {
     var key = this.getKey(newData);
     this.database.ref(this.path + '/' + key).set(data);
 
-    // 마지막 날짜보다 전이고, 없는 데이터 라면, 리스트에 추가한다.
-    let bFound = false;
-    if (newData.datFormat > this.lastItem.dateFormat) {
-      for (let i in this.itemsShow) {
-        let item = this.itemsShow[i];
-        if (item.url == newData.url) {
-          this.itemsShow[i] = newData;
-          bFound = true;
-          break;
-        }
-      }
-      if (bFound == false) {
-        this.sortList(newData);
-      }
+
+    let added = this.addedItems[newData.url];
+    if (!added && this.lastItem.dateFormat < newData.dateFormat) {
+      debugger;
+      this.itemsShow.unshift(newData);
+      this.showItems();
     }
+    // 마지막 날짜보다 전이고, 없는 데이터 라면, 리스트에 추가한다.
+    // let bFound = false;
+    // if (newData.datFormat > this.lastItem.dateFormat) {
+    //   debugger;
+    //   for (let i in this.itemsShow) {
+    //     let item = this.itemsShow[i];
+    //     if (item.url == newData.url) {
+    //       this.itemsShow[i] = newData;
+    //       bFound = true;
+    //       break;
+    //     }
+    //   }
+    //   if (bFound == false) {
+    //     this.sortList(newData);
+    //   }
+    // }
   }
 
   // 아이템들을 보여준다.
-  sortList(item) {
-    if (item) this.itemsShow.unshift(item);
-    this.ngZone.run(() => {
-      this.itemsShow.sort((a, b) => {
-        if (a.dateFormat < b.dateFormat) {
-          return 1;
-        } else if (a.dateFormat > b.dateFormat) {
-          return -1;
-        } else {
-          return 0;
-        }
-      });
+  sortList(obj) {
+    var array = $.map(obj, function(value, index) {
+      return [value];
     });
+
+    array.sort((a, b) => {
+      if (a.dateFormat > b.dateFormat) {
+        return 1;
+      } else if (a.dateFormat < b.dateFormat) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+    return array;
   }
 
   getKey(data) {
