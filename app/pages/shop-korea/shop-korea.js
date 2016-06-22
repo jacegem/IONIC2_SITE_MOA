@@ -87,7 +87,7 @@ export class ShopKoreaPage {
     this.itemsShow = [];
     this.database.ref(this.path).orderByChild(this.sortValue).limitToLast(this.pageRow).once('value', (snapshot) => {
       var items = snapshot.val();      
-      debugger;
+  
       items = this.sortList(items);
       this.lastItem = items[Object.keys(items)[0]];
 

@@ -48,3 +48,9 @@ ionic platform add android
 
 `ios` 의 경우 `android` 자리에 대신 적으면 됩니다. 
 
+
+
+### 참고
+- https://romannurik.github.io/AndroidAssetStudio/icons-launcher.html#foreground.type=image&foreground.space.trim=1&foreground.space.pad=0.1&foreColor=fff%2C0&crop=0&backgroundShape=square&backColor=bde2f6%2C100&effects=score
+
+
